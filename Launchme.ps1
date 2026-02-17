@@ -1,16 +1,16 @@
 <#
 .SYNOPSIS
-    Lance l'application Gallery Tagger sur un dossier d'images.
+    Lance l'application sur un dossier d'images.
 
 .DESCRIPTION
-    Script de lancement pour Gallery Tagger (Windows 11 / PowerShell 5.1+).
+    Script de lancement pour (Windows 11 / PowerShell 5.1+).
 
     Ce script effectue les étapes suivantes dans l'ordre :
       1. Validation du dossier fourni en paramètre (existence, permissions, contenu).
       2. Résolution des chemins internes (point d'entrée Python, fichier requirements.txt).
       3. Détection et vérification de l'interpréteur Python (version minimale, présence de pip).
       4. Installation/mise à jour des dépendances Python via pip.
-      5. Lancement de l'application gallery_tagger.py.
+      5. Lancement de l'application 'src/gallery_tagger.py'.
 
     Chaque étape est protégée par un bloc try/catch avec des messages d'erreur explicites.
     Le script retourne le code de sortie de l'application Python (0 = succès).
@@ -24,12 +24,12 @@
     .\Launchme.ps1
     .\Launchme.ps1 ./
 
-    Lance Gallery Tagger sur un chemin absolu (ou défaut si non spécifié).
+    Lance l'application sur un chemin absolu (ou défaut si non spécifié).
 
 .EXAMPLE
     .\Launchme.ps1 .\images
 
-    Lance Gallery Tagger sur un chemin relatif au répertoire courant.
+    Lance l'application sur un chemin relatif au répertoire courant.
 
 .NOTES
     Auteur       : IA
@@ -221,7 +221,7 @@ if (Test-Path -Path $Requirements) {
 # en argument. Le code de sortie de Python est propagé au script appelant.
 
 try {
-    Write-Host "Lancement de Gallery Tagger sur : $ResolvedFolder" -ForegroundColor Cyan
+    Write-Host "Lancement de l'application sur : $ResolvedFolder" -ForegroundColor Cyan
     Write-Host ("-" * 50) -ForegroundColor DarkGray
 
     # Appel de l'interpréteur Python avec le point d'entrée et le dossier résolu.
@@ -231,11 +231,11 @@ try {
     # Vérifier le code de sortie de l'application.
     # Un code différent de 0 indique une erreur côté Python.
     if ($LASTEXITCODE -ne 0) {
-        Write-Warning "Gallery Tagger s'est termine avec le code de sortie $LASTEXITCODE."
+        Write-Warning "L'application s'est terminee avec le code de sortie $LASTEXITCODE."
     }
 }
 catch {
-    Write-Error "Erreur lors de l'execution de Gallery Tagger : $_"
+    Write-Error "Erreur lors de l'execution de l'application : $_"
     exit 1
 }
 
