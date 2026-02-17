@@ -5,18 +5,19 @@ Application Win11_x64 permettant de parcourir des images et de renommer les fich
 
 ---
 
-Usage :
+### Usage
 Pour lancer l'application, passer par le script PowerShell "Launchme.ps1"
 
 ---
 
-Programmé en :
+### Programmé en
 Python 3.10+
 
 ---
 
-Documentation utilisateur : "docs/DOC_FONCTIONNELLE.md"
-Documentation technique   : "docs/DOC_TECHNIQUE.md"
+### Documentation
+- Utilisateur : "docs/DOC_FONCTIONNELLE.md"
+- Technique   : "docs/DOC_TECHNIQUE.md"
 
 ---
 
