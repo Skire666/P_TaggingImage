@@ -5,3 +5,24 @@ un bouton trier par ordre alphabétique
 ou alors un bouton trier par nbr d'usage actuel
 
 Bouton pour update le dossier (MAJ pas temps réel)
+
+
+
+Optimier expérience
+arrete de faire poper une fenetre de succès
+just une sticky note qui disparait
+par contre, garder les fenetre bloquant en cas d'erreur
+
+
+fichier de conf
+avec quelque limite (longuer fichier, longeuur caracteres)
+rendre séparateur configurable
+
+retenir dernier dossier ouvert
+ou si rien, proposer d'ouvrrir un autre dossier.
+ou drag and drop
+
+
+
+lorsque je split les tags, pensait a faire des trims (espace blanc)
+spliter sur ',' seulement, gérer espace dynamiquement
