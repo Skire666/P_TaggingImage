@@ -1,0 +1,7 @@
+
+champ texte pour filtrer et faciliter recherche un tag
+
+un bouton trier par ordre alphabétique
+ou alors un bouton trier par nbr d'usage actuel
+
+Bouton pour update le dossier (MAJ pas temps réel)
