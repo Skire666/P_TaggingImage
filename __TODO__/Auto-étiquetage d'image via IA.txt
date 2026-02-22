@@ -1,0 +1,4 @@
+
+fournir l'image à une IA
+trouve les tags qui identifie le mieux
+corrige les tags trouvés avec des synonymes pré-inscrit dans un fichier de conf

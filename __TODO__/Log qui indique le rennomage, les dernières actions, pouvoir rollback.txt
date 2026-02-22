@@ -1,0 +1,4 @@
+Log qui indique le renomage, qui à ouvert quoi, qui a chargé quoi
+chaque bouton, avec les dernières actions
+si dispo, associer un rollback pour annuler/reverse
+
