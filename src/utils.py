@@ -298,7 +298,7 @@ def center_window(window: tk.Toplevel, width: int, height: int) -> None:
     Example:
         >>> top = tk.Toplevel(root)
         >>> center_window(top, 450, 250)
-        # La fenêtre est centrée à l'écran avec 450x250 pixels.
+        # La fenêtre est centrée à l'écran avec 'LOADING_WIN_SIZE' pixels.
     """
     sx = window.winfo_screenwidth()
     sy = window.winfo_screenheight()

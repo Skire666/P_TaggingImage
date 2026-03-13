@@ -80,7 +80,7 @@ L’écran principal affiche trois images côte à côte :
 
 - Les images sont redimensionnées dynamiquement pour s’adapter à la taille de la fenêtre tout en conservant leur ratio d’aspect.
 - Cliquer sur l’image de gauche ou de droite navigue directement vers cette image.
-- Le redimensionnement est géré avec un debounce de 150 ms pour éviter les recalculs excessifs.
+- Le redimensionnement est géré avec un debounce (en ms) pour éviter les recalculs excessifs.
 
 ### 2. Navigation
 
@@ -97,7 +97,7 @@ Affiche en permanence :
 
 ### 4. Panneau de tags (cases à cocher)
 
-- Situé en bas à gauche (50 % de la largeur du footer).
+- Situé en bas à gauche (largeur liée à 'FOOTER_COL_WEIGHTS').
 - Affiche **tous les tags** détectés dans l’ensemble du dossier, avec leur nombre d’occurrences entre parenthèses (ex : `chat (5)`).
 - Les tags sont triés par **fréquence décroissante**, puis alphabétiquement.
 - Les tags présents dans le nom du fichier courant sont **pré-cochés automatiquement**.
@@ -121,7 +121,7 @@ base - [tag1, tag2, tag3] - compteur.ext
 
 ### 6. Panneau de renommage
 
-Situé en bas à droite (50 % du footer), il contient :
+Situé en bas à droite (lié à 'FOOTER_COL_WEIGHTS'), il contient :
 
 1. **Champ « Nouveau nom »** — éditable, pré-rempli automatiquement au format `base - [tags]`. Modifiable manuellement.
 2. **Affichage de l’extension** — non éditable, toujours visible à droite du champ.

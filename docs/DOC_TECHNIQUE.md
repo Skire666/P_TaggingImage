@@ -85,7 +85,7 @@ Contient **toutes** les valeurs paramétrables :
 | Catégorie         | Constantes clés                                                                 |
 |--------------------|-------------------------------------------------------------------------------------|
 | **Extensions**     | `SUPPORTED_EXTENSIONS` (frozenset de 8 formats)                                     |
-| **Dimensions**     | `LOADING_WIN_SIZE` (450×250), `FOOTER_PX` (190 px), `GALLERY_COL_WEIGHTS` (`[2, 6, 2]`) |
+| **Dimensions**     | `LOADING_WIN_SIZE`, `FOOTER_PX`, `GALLERY_COL_WEIGHTS` |
 | **Tailles fenêtre** | `MIN_WIN_WIDTH` (300), `MIN_WIN_HEIGHT` (300)                                       |
 | **Limites**        | `max_path_len` et `max_filename_len` via `config.json` (defauts 220/110)            |
 | **Séparateurs**    | `MAIN_SEPARATOR` (` - `), `TAG_SEPARATOR` (`, `), `TAG_OPEN` (`[`), `TAG_CLOSE` (`]`) |
@@ -175,7 +175,7 @@ Construit toute l’interface sans logique métier. Expose des **variables Tkint
 
 | Zone        | Composants                                                        |
 |-------------|-------------------------------------------------------------------|
-| **Galerie** | 3 `LabelFrame` avec `Label` pour images, pondération `[2, 6, 2]` |
+| **Galerie** | 3 `LabelFrame` avec `Label` pour images, pondération de la largeur |
 | **Info bar** | Nom du fichier, index, boutons navigation (Précédent, Suivant, Prochain à tagguer), bouton explorateur |
 | **Tags**    | Widget `tk.Text` (wrap="char") avec `Checkbutton` dynamiques intégrés, défilement vertical via `ttk.Scrollbar` |
 | **Rename**  | Entry (nouveau nom), Label (extension), Label (aperçu), Labels (longueurs), label format, bouton renommer |
@@ -219,7 +219,7 @@ Orchestre l’ensemble de l’application (~845 lignes) :
 | `_show_image(key, index, label, size)`  | Charge et affiche une image dans un label            |
 | `_update_info_and_tags()`               | Met à jour barre d’info et coche les tags adéquats     |
 | `_bind_gallery_resize()`               | Écoute `<Configure>` sur le cadre galerie             |
-| `_on_gallery_configure(event)`          | Handler debounce (150 ms) pour le redimensionnement  |
+| `_on_gallery_configure(event)`          | Handler avec debounce pour le redimensionnement  |
 | `_on_gallery_resized()`                 | Recharge les images après stabilisation de la taille |
 | `_get_panel_size(label)`                | Retourne les dimensions disponibles d’un panneau      |
 
@@ -266,7 +266,7 @@ Orchestre l’ensemble de l’application (~845 lignes) :
 
 **Debounce du redimensionnement**
 
-Le redimensionnement de la galerie est déclenché par l’événement `<Configure>`. Un timer de **150 ms** évite les recalculs excessifs pendant le glissement de la fenêtre. La taille précédente est mémorisée (`_last_gallery_size`) pour ignorer les événements `<Configure>` découlant de l’insertion d’images.
+Le redimensionnement de la galerie est déclenché par l’événement `<Configure>`. Un timer pour le debounce évite les recalculs excessifs pendant le glissement de la fenêtre. La taille précédente est mémorisée (`_last_gallery_size`) pour ignorer les événements `<Configure>` découlant de l’insertion d’images.
 
 ```python
 def _on_gallery_configure(self, event):
@@ -275,7 +275,7 @@ def _on_gallery_configure(self, event):
         return
     if self._resize_after_id is not None:
         self.root.after_cancel(self._resize_after_id)
-    self._resize_after_id = self.root.after(150, self._on_gallery_resized)
+    self._resize_after_id = self.root.after(GALLERY_RESIZE_DEBOUNCE_MS, self._on_gallery_resized)
 ```
 
 **Résolution de conflit de noms**

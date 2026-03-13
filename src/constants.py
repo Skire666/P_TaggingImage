@@ -36,10 +36,10 @@ SUPPORTED_EXTENSIONS: frozenset[str] = frozenset({
 LOADING_WIN_SIZE: tuple[int, int] = (450, 250)
 """Dimensions (largeur, hauteur) de la fenêtre de chargement en pixels."""
 
-FOOTER_PX: int = 190
+FOOTER_PX: int = 195
 """Hauteur fixe du footer en pixels."""
 
-GALLERY_COL_WEIGHTS: list[int] = [2, 6, 2]
+GALLERY_COL_WEIGHTS: list[int] = [20, 60, 20]
 """Poids des colonnes de la galerie triptyque (gauche, centre, droite)."""
 
 FOOTER_COL_WEIGHTS: tuple[int, int] = (54, 46)
@@ -50,6 +50,9 @@ MIN_WIN_WIDTH: int = 300
 
 MIN_WIN_HEIGHT: int = 300
 """Hauteur minimale de la fenêtre principale en pixels (0 = pas de minimum)."""
+
+GALLERY_RESIZE_DEBOUNCE_MS: int = 120
+"""Délai de debounce (ms) avant rafraîchissement des images au resize."""
 
 # =============================================================================
 #  SÉPARATEURS
@@ -93,7 +96,7 @@ BUTTON_FG: str = "#cdd6f4"
 ENTRY_BG: str = "#45475a"
 """Fond des champs de saisie."""
 
-ENTRY_FG: str = "#cdd6f4"
+ENTRY_FG: str = "#c9d1ea"
 """Texte des champs de saisie."""
 
 CHECK_BG: str = "#313244"

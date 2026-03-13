@@ -14,8 +14,8 @@ les widgets et d'exposer les StringVar / BooleanVar / Labels
 pour être pilotée par le contrôleur.
 
 Layout :
-    - Haut  : galerie triptyque (3 cadres 25%/50%/25%), hauteur libre.
-    - Bas   : footer fixe 500 px contenant :
+    - Haut  : galerie triptyque (3 cadres -> gauche | centre | droite).
+    - Bas   : footer (taille fixe) contenant :
         - Ligne 1 : barre d'info (explorateur | titre | nav)
         - Ligne 2 : tags | renommage
 
@@ -101,7 +101,7 @@ class GalleryView:
         """
         Construit la zone galerie triptyque (3 cadres d'images).
 
-        Crée un Frame à 3 colonnes fixes (1:2:1 → 25%:50%:25%).
+        Crée un Frame à 3 colonnes fixes (lié à 'GALLERY_COL_WEIGHTS').
         La hauteur s'adapte à la place restante au-dessus du footer.
 
         Example:
@@ -123,7 +123,7 @@ class GalleryView:
         )
         self.center_label = self._create_image_panel(
             self.gallery_frame, " Image courante ", HIGHLIGHT, col=1, padx=5,
-            font_size=10,
+            font_size=12,
         )
         self.next_label = self._create_image_panel(
             self.gallery_frame, " Suivante ", ACCENT_COLOR, col=2, padx=(5, 0),
@@ -133,7 +133,7 @@ class GalleryView:
     def _create_image_panel(
         self, parent: tk.Frame, title: str, fg_color: str, *,
         col: int, padx: int | tuple[int, int],
-        font_size: int = 9, on_click: Callable | None = None,
+        font_size: int = 12, on_click: Callable | None = None,
     ) -> tk.Label:
         """
         Crée un panneau d'image (LabelFrame + Label) dans la galerie.
@@ -292,7 +292,7 @@ class GalleryView:
 
         # --- Ligne 1 : Nouveau nom ---
         row1 = tk.Frame(outer, bg=FRAME_BG)
-        row1.pack(side=tk.TOP, fill=tk.X, padx=8, pady=(6, 2))
+        row1.pack(side=tk.TOP, fill=tk.X, padx=8, pady=(8, 4))
 
         tk.Label(row1, text="Nouveau nom :", bg=FRAME_BG, fg=FG_COLOR,
                  font=FONT_MD).pack(side=tk.LEFT)

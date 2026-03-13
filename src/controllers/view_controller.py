@@ -19,6 +19,7 @@ from tkinterdnd2 import DND_FILES, TkinterDnD
 
 from constants import (
     BG_COLOR,
+    GALLERY_RESIZE_DEBOUNCE_MS,
     MAIN_SEPARATOR,
     TAG_CLOSE,
     TAG_OPEN,
@@ -110,9 +111,11 @@ class ViewController:
         if self._resize_after_id is not None and self.root is not None:
             self.root.after_cancel(self._resize_after_id)
 
+        # On utilise `after` pour attendre que le redimensionnement soit stabilise avant de rafraichir les images
+        # afin d'eviter des recalculs trop frequents pendant le resize.
         if self.root is not None:
             self._resize_after_id = self.root.after(
-                150,
+                GALLERY_RESIZE_DEBOUNCE_MS,
                 lambda: self._on_gallery_resized(file_controller),
             )
 
