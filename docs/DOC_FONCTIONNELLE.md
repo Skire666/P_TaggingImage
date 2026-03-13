@@ -125,12 +125,11 @@ Situé en bas à droite (lié à 'FOOTER_COL_WEIGHTS'), il contient :
 
 1. **Champ « Nouveau nom »** — éditable, pré-rempli automatiquement au format `base - [tags]`. Modifiable manuellement.
 2. **Affichage de l’extension** — non éditable, toujours visible à droite du champ.
-3. **Résultat final** — aperçu en temps réel du nom complet avec compteur et extension.
-4. **Indicateurs de longueur** :
+3. **Indicateurs de longueur** :
    - Longueur totale du chemin complet (dossier + fichier).
    - Longueur du nom de fichier avec extension.
-5. **Rappel du format** : un label affiche `Format : 'base - [tags] - count'`.
-6. **Bouton « Renommer fichier »** — applique le renommage.
+4. **Rappel du format** : un label affiche `Format : 'base - [tags] - count'`.
+5. **Bouton « Renommer fichier »** — applique le renommage.
 
 ### 7. Renommage
 

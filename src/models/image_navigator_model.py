@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 """
 =============================================================================
-  FileModel — Modèle de gestion des fichiers images
+    ImageNavigatorModel — Modèle de gestion des fichiers images
 =============================================================================
 
 Gère la liste des fichiers images d'un dossier :
 scanning, navigation cyclique et renommage sur disque.
 
 Example:
-    >>> model = FileModel("C:/images")
+    >>> model = ImageNavigatorModel("C:/images")
     >>> model.load_files()
     >>> model.current_filename()
     'chat noir.png'
@@ -22,7 +22,7 @@ import os
 from utils import is_supported_image, is_filename_tagged
 
 
-class FileModel:
+class ImageNavigatorModel:
     """
     Modèle de données pour la liste de fichiers images.
 
@@ -32,7 +32,7 @@ class FileModel:
         current_index: Index de l'image courante (0 par défaut).
 
     Example:
-        >>> model = FileModel("./images")
+        >>> model = ImageNavigatorModel("./images")
         >>> model.load_files()
         >>> len(model.file_list)
         42
@@ -47,7 +47,7 @@ class FileModel:
                          contenant les images.
 
         Example:
-            >>> model = FileModel("C:/images")
+            >>> model = ImageNavigatorModel("C:/images")
             >>> model.folder_path
             'C:\\images'
         """

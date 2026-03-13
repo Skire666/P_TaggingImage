@@ -1,0 +1,14 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "Add-Content": true,
+        "/^python -c \"\nwith open\\('tools/tag_tools\\.py', 'r', encoding='utf-8'\\) as f:\n    text = f\\.read\\(\\)\ntext = text\\.replace\\('TagTools\\.TagTools\\.', 'TagTools\\.'\\)\nwith open\\('tools/tag_tools\\.py', 'w', encoding='utf-8'\\) as f:\n    f\\.write\\(text\\)\n\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        ".\\Launchme.ps1": true,
+        "/^python refactor\\.py$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

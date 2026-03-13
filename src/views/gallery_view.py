@@ -304,25 +304,7 @@ class GalleryView:
             font=FONT_MD, relief="flat",
         ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=10)
 
-        self.ext_label_var = tk.StringVar(value="")
-        tk.Label(row1, textvariable=self.ext_label_var, bg=FRAME_BG,
-                 fg=ACCENT_COLOR, font=FONT_MD_BOLD).pack(side=tk.LEFT)
-
-        # --- Ligne 2 : Résultat final ---
-        row2 = tk.Frame(outer, bg=FRAME_BG)
-        row2.pack(side=tk.TOP, fill=tk.X, padx=8, pady=(4, 4))
-
-        tk.Label(row2, text="Résultat final :", bg=FRAME_BG, fg=FG_COLOR,
-                 font=FONT_SM).pack(side=tk.LEFT)
-
-        self.preview_var = tk.StringVar(value="")
-        tk.Label(
-            row2, textvariable=self.preview_var,
-            bg=FRAME_BG, fg=ACCENT_COLOR,
-            font=FONT_SM_ITALIC, anchor="w",
-        ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(8, 0))
-
-        # --- Ligne 3 : Longueurs + Bouton Appliquer ---
+        # --- Ligne 2 : Longueurs + Bouton Appliquer ---
         row3 = tk.Frame(outer, bg=FRAME_BG)
         row3.pack(side=tk.TOP, fill=tk.X, padx=8, pady=(0, 0))
 
@@ -334,7 +316,7 @@ class GalleryView:
         ).pack(side=tk.LEFT)
         tk.Label(
             row3, textvariable=self.path_len_var, bg=FRAME_BG,
-            fg=ACCENT_COLOR, font=FONT_SM_BOLD, width=4, anchor="w",
+            fg=ACCENT_COLOR, font=FONT_SM_BOLD, width=5, anchor="w",
         ).pack(side=tk.LEFT)
 
         # Longueur du fichier avec extension
@@ -345,13 +327,16 @@ class GalleryView:
         ).pack(side=tk.LEFT)
         tk.Label(
             row3, textvariable=self.filename_len_var, bg=FRAME_BG,
-            fg=ACCENT_COLOR, font=FONT_SM_BOLD, width=4, anchor="w",
+            fg=ACCENT_COLOR, font=FONT_SM_BOLD, width=5, anchor="w",
         ).pack(side=tk.LEFT)
 
         tk.Label(
-            row3, text="Forme : 'base - [tags] - count'", bg=FRAME_BG, fg=FG_COLOR,
+            row3, text="Ext. :", bg=FRAME_BG, fg=FG_COLOR,
             font=FONT_SM,
         ).pack(side=tk.LEFT)
+        self.ext_label_var = tk.StringVar(value="")
+        tk.Label(row3, textvariable=self.ext_label_var, bg=FRAME_BG,
+                 fg=ACCENT_COLOR, font=FONT_MD_BOLD).pack(side=tk.LEFT)
 
         tk.Button(
             row3, text="✔  Renommer fichier",

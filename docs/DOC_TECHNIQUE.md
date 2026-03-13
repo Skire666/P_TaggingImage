@@ -34,7 +34,7 @@ tagger3k/
     │   └── main_controller.py      # Contrôleur principal
     ├── models/
     │   ├── __init__.py
-    │   ├── file_model.py       # Gestion de la liste de fichiers
+    │   ├── image_navigator_model.py # Gestion de la liste de fichiers
     │   ├── config_model.py     # Gestion de la configuration JSON
     │   └── tag_model.py        # Extraction et comptage des tags
     └── views/
@@ -97,18 +97,18 @@ Contient **toutes** les valeurs paramétrables :
 
 Fonctions pures sans dépendance aux modèles/vues :
 
-| Fonction                     | Description                                                         |
-|------------------------------|---------------------------------------------------------------------|
-| `parse_filename(name)`       | Extrait `(extension, [tags])` depuis le format à crochets              |
+| Fonction                      | Description                                                         |
+|-------------------------------|---------------------------------------------------------------------|
+| `get_list_tags(name)`         | Extrait `[tags]` depuis le format à crochets              |
 | `_matches_tagged_syntax(stem)` | Vérifie si un stem suit le format `base - [tags] - compteur`        |
-| `is_filename_tagged(name)`   | Vérifie si un nom de fichier est conforme au format taggué          |
-| `resize_image_to_fit()`      | Redimensionne un `PIL.Image` avec ratio conservé (LANCZOS)           |
-| `load_image_safe()`          | Charge un fichier image, retourne `PIL.Image` ou `None`              |
-| `open_in_explorer()`         | Ouvre l’Explorateur Windows avec le fichier sélectionné              |
-| `is_supported_image()`       | Vérifie l’extension par rapport à `SUPPORTED_EXTENSIONS`             |
-| `center_window()`            | Centre une fenêtre Tkinter `Toplevel` sur l’écran                    |
+| `is_filename_tagged(name)`    | Vérifie si un nom de fichier est conforme au format taggué          |
+| `resize_image_to_fit()`       | Redimensionne un `PIL.Image` avec ratio conservé (LANCZOS)           |
+| `load_image_safe()`           | Charge un fichier image, retourne `PIL.Image` ou `None`              |
+| `open_in_explorer()`          | Ouvre l’Explorateur Windows avec le fichier sélectionné              |
+| `is_supported_image()`        | Vérifie l’extension par rapport à `SUPPORTED_EXTENSIONS`             |
+| `center_window()`             | Centre une fenêtre Tkinter `Toplevel` sur l’écran                    |
 
-#### Algorithme de `parse_filename`
+#### Algorithme de `get_list_tags`
 
 ```python
 # Entrée : "auteur - [tag1, tag2] - 1000.png"
@@ -116,14 +116,14 @@ Fonctions pures sans dépendance aux modèles/vues :
 # 2. Cherche le délimiteur ouvrant " - ["
 # 3. Cherche le délimiteur fermant "] - "
 # 4. Extrait le contenu entre crochets, split sur ", "
-# 5. Retourne (".png", ["tag1", "tag2"])
+# 5. Retourne ["tag1", "tag2"]
 ```
 
 Cas dégradés :
-- Pas de crochets → `(ext, [])`
-- Crochets vides → `(ext, [])`
+- Pas de crochets → `[]`
+- Crochets vides → `[]`
 
-### `models/file_model.py`
+### `models/image_navigator_model.py`
 
 Gère une **liste ordonnée de fichiers** et un **index de navigation** :
 
@@ -166,7 +166,7 @@ Construit un `OrderedDict[str, int]` de tags triés :
 |---------------------------|----------------------------------------------------|
 | `build(files, callback)`  | Parse tous les fichiers, appelle `callback` pour la progression |
 | `rebuild(files)`          | Reconstruction sans callback (après renommage)     |
-| `_count_tags_in_file()`   | Utilise `parse_filename` pour extraire les tags     |
+| `_count_tags_in_file()`   | Utilise `get_list_tags` pour extraire les tags     |
 | `_sort_dict()`            | Tri par fréquence décroissante puis alphabétique     |
 
 ### `views/gallery_view.py`
@@ -180,7 +180,7 @@ Construit toute l’interface sans logique métier. Expose des **variables Tkint
 | **Tags**    | Widget `tk.Text` (wrap="char") avec `Checkbutton` dynamiques intégrés, défilement vertical via `ttk.Scrollbar` |
 | **Rename**  | Entry (nouveau nom), Label (extension), Label (aperçu), Labels (longueurs), label format, bouton renommer |
 
-Variables exposées : `info_var`, `new_name_var`, `ext_label_var`, `preview_var`, `path_len_var`, `filename_len_var`, `check_vars` (dict `{tag: BooleanVar}`).
+Variables exposées : `info_var`, `new_name_var`, `ext_label_var`, `path_len_var`, `filename_len_var`, `check_vars` (dict `{tag: BooleanVar}`).
 
 Widgets exposés : `gallery_frame`, `prev_label`, `center_label`, `next_label`.
 
@@ -243,7 +243,7 @@ Orchestre l’ensemble de l’application (~845 lignes) :
 | `_validate_rename()`       | Vérifie que le nouveau nom diffère de l’actuel                    |
 | `_resolve_conflict()`      | Incrémente le compteur si le nom existe déjà                      |
 | `_check_length()`          | Vérifie les limites de longueur (chemin et nom de fichier)      |
-| `_perform_rename()`        | Exécute le renommage via FileModel et reconstruit les tags      |
+| `_perform_rename()`        | Exécute le renommage via ImageNavigatorModel et reconstruit les tags      |
 
 #### Navigation
 
@@ -283,7 +283,7 @@ def _on_gallery_configure(self, event):
 ```python
 def _find_available_name(self, base, ext, *, ignore=""):
     for counter in range(1000, 10000):
-        candidate = f"{base}{MAIN_SEPARATOR}{counter}{ext}"
+        candidate = f"{base}{tags}{counter}{ext}"
         if candidate == ignore or not self.file_model.file_exists(candidate):
             return candidate
     return None  # Tous les compteurs épuisés
@@ -292,7 +292,7 @@ def _find_available_name(self, base, ext, *, ignore=""):
 **Rechargement de dossier (drag & drop)**
 
 La méthode `_reload_folder()` réinitialise complètement l’état :
-1. Crée un nouveau `FileModel` avec le nouveau chemin.
+1. Crée un nouveau `ImageNavigatorModel` avec le nouveau chemin.
 2. Charge les fichiers (avertit si vide).
 3. Crée un nouveau `TagModel` et construit les tags avec barre de progression.
 4. Libère les références d’images (`_img_refs`).
@@ -331,7 +331,7 @@ L’application utilise la palette **Catppuccin Mocha** :
 2. MainController(folder_path) :
     a. Création de ConfigModel
     b. `_resolve_start_folder()` : CLI > config > dossier courant
-    c. Création de FileModel, TagModel
+    c. Création de ImageNavigatorModel, TagModel
     d. _init_window() → TkinterDnD.Tk(), titre, taille, maximize
     e. _load_files_or_warn() → scanne le dossier
     f. _build_tags_with_progress()

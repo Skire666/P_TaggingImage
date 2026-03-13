@@ -55,17 +55,17 @@ GALLERY_RESIZE_DEBOUNCE_MS: int = 120
 """Délai de debounce (ms) avant rafraîchissement des images au resize."""
 
 # =============================================================================
-#  SÉPARATEURS
+#  SÉPARATEURS (ex: 'base - [tags] - 1000')
 # =============================================================================
 
-MAIN_SEPARATOR: str = " - "
-"""Séparateur principal entre les sections du nom (ex: 'base - [tags] - 1000')."""
-
-TAG_OPEN: str = "["
+TAG_OPEN: str = " - ["
 """Délimiteur ouvrant de la liste de tags."""
 
-TAG_CLOSE: str = "]"
+TAG_CLOSE: str = "] - "
 """Délimiteur fermant de la liste de tags."""
+
+TAG_CLOSE_FLEX: str = "]."
+"""Délimiteur plus souple (sans compteur) fermant de la liste de tags."""
 
 TAG_SEPARATOR: str = ", "
 """Séparateur entre les tags individuels dans les crochets."""

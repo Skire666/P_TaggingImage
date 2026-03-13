@@ -20,9 +20,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from typing import Callable
-
-from utils import parse_filename
-
+from tools.tag_tools import TagTools
 
 class TagModel:
     """
@@ -57,7 +55,7 @@ class TagModel:
         """
         Construit le dictionnaire { tag: compteur } à partir des fichiers.
 
-        Parcourt chaque fichier, extrait les tags via parse_filename(),
+        Parcourt chaque fichier, extrait les tags via TagTools.get_list_tags(),
         et comptabilise les occurrences (insensible à la casse).
 
         Args:
@@ -121,7 +119,7 @@ class TagModel:
             >>> acc
             {'chat': 1, 'noir': 1}
         """
-        _ext, tags = parse_filename(filename)
+        tags = TagTools.get_list_tags(filename)
         for tag in tags:
             key = tag.lower()
             accumulator[key] = accumulator.get(key, 0) + 1

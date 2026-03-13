@@ -18,7 +18,7 @@ Description :
 Architecture MVC :
     - constants.py                    → Constantes, thème, styles
     - utils.py                        → Fonctions utilitaires (parsing, images, système)
-    - models/file_model.py            → Modèle de gestion des fichiers
+    - models/image_navigator_model.py → Modèle de gestion des fichiers
     - models/tag_model.py             → Modèle de gestion des tags
     - views/loading_view.py           → Écran de chargement
     - views/gallery_view.py           → Vue principale (galerie, tags, renommage)
@@ -42,6 +42,11 @@ from __future__ import annotations
 import os
 import sys
 import argparse
+
+# Ensure project root is importable when launching via "python src/gallery_tagger.py"
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 from controllers.main_controller import MainController
 

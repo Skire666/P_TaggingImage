@@ -20,15 +20,17 @@ from tkinterdnd2 import DND_FILES, TkinterDnD
 from constants import (
     BG_COLOR,
     GALLERY_RESIZE_DEBOUNCE_MS,
-    MAIN_SEPARATOR,
     TAG_CLOSE,
     TAG_OPEN,
-    TAG_SEPARATOR,
     MIN_WIN_HEIGHT,
     MIN_WIN_WIDTH,
+    TAG_SEPARATOR,
 )
-from utils import load_image_safe, parse_filename, resize_image_to_fit
+
+from controllers import file_controller
+from utils import load_image_safe, resize_image_to_fit
 from views.gallery_view import GalleryView
+from tools.tag_tools import TagTools
 
 if TYPE_CHECKING:
     from controllers.file_controller import FileController
@@ -205,7 +207,7 @@ class ViewController:
         _name, ext = os.path.splitext(filename)
         self.view.ext_label_var.set(ext)
 
-        _ext, tags = parse_filename(filename)
+        tags = TagTools.get_list_tags(filename)
         tags_lower = {t.lower() for t in tags}
         for tag, var in self.view.check_vars.items():
             var.set(tag in tags_lower)
@@ -226,24 +228,17 @@ class ViewController:
         )
 
         filename = file_controller.current_filename()
-        name_no_ext, _ = os.path.splitext(filename)
 
-        open_delim = MAIN_SEPARATOR + TAG_OPEN
-        open_idx = name_no_ext.find(open_delim)
+        base_name = TagTools.get_base_name(filename)
+        extension = self.view.ext_label_var.get()
+        counter = TagTools.get_counter(filename)
 
-        if open_idx != -1:
-            left_part = name_no_ext[:open_idx].strip()
+        if not selected:
+            new_name = f"{base_name}{TAG_OPEN}{TAG_CLOSE}{counter}{extension}"
         else:
-            parts = name_no_ext.rsplit(MAIN_SEPARATOR, 1)
-            left_part = parts[0].strip()
-
-        tag_part = TAG_SEPARATOR.join(selected)
-        bracket_block = TAG_OPEN + tag_part + TAG_CLOSE
-
-        if left_part:
-            new_name = left_part + MAIN_SEPARATOR + bracket_block
-        else:
-            new_name = bracket_block
+            tag_part = TAG_SEPARATOR.join(selected)
+            bracket_block = TAG_OPEN + tag_part + TAG_CLOSE
+            new_name = f"{base_name}{bracket_block}{counter}{extension}"
 
         self.view.new_name_var.set(new_name)
 
@@ -260,7 +255,6 @@ class ViewController:
         """Vide les champs d'aperçu et de longueurs."""
         if self.view is None:
             return
-        self.view.preview_var.set("")
         self.view.path_len_var.set("")
         self.view.filename_len_var.set("")
 
@@ -278,18 +272,9 @@ class ViewController:
             self.clear_preview_fields()
             return
 
-        old_filename = file_controller.current_filename()
-        _, ext = os.path.splitext(old_filename)
-
-        resolved = file_controller.find_available_name(new_base, ext, ignore=old_filename)
-        self.view.preview_var.set(
-            resolved or f"{new_base}{MAIN_SEPARATOR}1000{ext}  [conflit !]",
-        )
-
-        final_name = self.view.preview_var.get()
-        full_path = os.path.join(file_controller.folder_path, final_name)
+        full_path = os.path.join(file_controller.folder_path, new_base)
         self.view.path_len_var.set(str(len(full_path)))
-        self.view.filename_len_var.set(str(len(final_name)))
+        self.view.filename_len_var.set(str(len(new_base)))
 
     def get_new_name(self) -> str:
         """Retourne le contenu du champ `Nouveau nom`."""

@@ -10,11 +10,8 @@ l'état global de l'application, ni du framework Tkinter :
 parsing de noms de fichiers, manipulation d'images (PIL), interactions
 avec le système d'exploitation.
 
-Example:
-    >>> from utils import parse_filename, resize_image_to_fit
-    >>> parse_filename("chat noir mignon -- auteur.png")
-    (".png", ["chat", "noir", "mignon"])
 """
+
 
 from __future__ import annotations
 
@@ -29,65 +26,7 @@ except ImportError:
     print("Installez-la avec : pip install Pillow")
     raise SystemExit(1)
 
-from constants import MAIN_SEPARATOR, TAG_OPEN, TAG_CLOSE, TAG_SEPARATOR, SUPPORTED_EXTENSIONS
-
-
-# =============================================================================
-#  PARSING
-# =============================================================================
-
-def parse_filename(filename: str) -> tuple[str, list[str]]:
-    """
-    Découpe un nom de fichier en (extension, liste_de_tags).
-
-    Format attendu : ``base - [tag1, tag2, tag3] - 0.png``
-
-    Algorithme :
-        1. Sépare l'extension du reste du nom.
-        2. Cherche les délimiteurs `` - [`` et ``] - `` pour isoler
-           la partie entre crochets.
-        3. Découpe cette partie par ``, `` → liste de tags.
-
-    Si le nom ne contient pas de crochets, la liste de tags est vide.
-
-    Args:
-        filename: Nom du fichier avec extension.
-                  Ex: ``"base - [tag1, tag2, tag3] - 1000.png"``
-
-    Returns:
-        tuple[str, list[str]]: Tuple (extension, liste_de_tags).
-
-    Example:
-        >>> parse_filename("base - [chat, noir, mignon] - 1000.png")
-        (".png", ["chat", "noir", "mignon"])
-        >>> parse_filename("base - [] - 1000.png")
-        (".png", [])
-        >>> parse_filename("paysage.jpg")
-        (".jpg", [])
-    """
-    name_without_ext, extension = os.path.splitext(filename)
-
-    open_delim = MAIN_SEPARATOR + TAG_OPEN # ex: " - ["
-    close_delim = TAG_CLOSE + MAIN_SEPARATOR # ex: "] - "
-
-    # Trouve l'index du délimiteur ouvrant. S'il n'existe pas, pas de tags → retourne l'extension et une liste vide.
-    open_idx = name_without_ext.find(open_delim)
-    if open_idx == -1:
-        return extension, []
-
-    # L'index de début des tags est juste après le délimiteur ouvrant
-    tag_start = open_idx + len(open_delim)
-    close_idx = name_without_ext.find(close_delim, tag_start)
-    if close_idx == -1: # pas de fermeture après l'ouverture → pas de tags valides
-        return extension, []
-
-    tag_content = name_without_ext[tag_start:close_idx].strip()
-    if not tag_content: # contenu vide entre les délimiteurs → pas de tags
-        return extension, []
-
-    # Découpe par TAG_SEPARATOR et nettoie les tags individuels
-    tags = [t.strip() for t in tag_content.split(TAG_SEPARATOR) if t.strip()]
-    return extension, tags
+from constants import TAG_OPEN, TAG_CLOSE, SUPPORTED_EXTENSIONS
 
 
 def _matches_tagged_syntax(stem: str) -> bool:
@@ -111,22 +50,20 @@ def _matches_tagged_syntax(stem: str) -> bool:
         >>> _matches_tagged_syntax("photo")
         False
     """
-    open_delim = MAIN_SEPARATOR + TAG_OPEN            # " - ["
-    close_delim = TAG_CLOSE + MAIN_SEPARATOR          # "] - "
 
     # 1. Cherche le délimiteur ouvrant (base non-vide avant)
-    open_idx = stem.find(open_delim)
+    open_idx = stem.find(TAG_OPEN)
     if open_idx <= 0:
         return False
 
     # 2. Cherche le délimiteur fermant après l'ouverture
-    tag_start = open_idx + len(open_delim)
-    close_idx = stem.find(close_delim, tag_start)
+    tag_start = open_idx + len(TAG_OPEN)
+    close_idx = stem.find(TAG_CLOSE, tag_start)
     if close_idx == -1:
         return False
 
     # 3. Verifie la presence d'un compteur numerique apres "] - "
-    counter_start = close_idx + len(close_delim)
+    counter_start = close_idx + len(TAG_CLOSE)
     counter_part = stem[counter_start:].strip()
     if not counter_part.isdigit():
         return False
