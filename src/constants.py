@@ -33,7 +33,7 @@ SUPPORTED_EXTENSIONS: frozenset[str] = frozenset({
 #  DIMENSIONS
 # =============================================================================
 
-LOADING_WIN_SIZE: tuple[int, int] = (420, 120)
+LOADING_WIN_SIZE: tuple[int, int] = (450, 250)
 """Dimensions (largeur, hauteur) de la fenêtre de chargement en pixels."""
 
 FOOTER_PX: int = 190
@@ -42,17 +42,14 @@ FOOTER_PX: int = 190
 GALLERY_COL_WEIGHTS: list[int] = [2, 6, 2]
 """Poids des colonnes de la galerie triptyque (gauche, centre, droite)."""
 
+FOOTER_COL_WEIGHTS: tuple[int, int] = (54, 46)
+"""Poids des colonnes du footer (tags, renommage) pour une répartition 54/46."""
+
 MIN_WIN_WIDTH: int = 300
 """Largeur minimale de la fenêtre principale en pixels."""
 
 MIN_WIN_HEIGHT: int = 300
 """Hauteur minimale de la fenêtre principale en pixels (0 = pas de minimum)."""
-
-MAX_PATH_LEN: int = 235
-"""Seuil d'avertissement pour la longueur du chemin complet (caractères)."""
-
-MAX_FILENAME_LEN: int = 120
-"""Seuil d'avertissement pour la longueur du nom de fichier seul (caractères)."""
 
 # =============================================================================
 #  SÉPARATEURS

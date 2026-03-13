@@ -22,7 +22,7 @@ Architecture MVC :
     - models/tag_model.py             → Modèle de gestion des tags
     - views/loading_view.py           → Écran de chargement
     - views/gallery_view.py           → Vue principale (galerie, tags, renommage)
-    - controllers/gallery_controller.py → Contrôleur principal
+    - controllers/main_controller.py → Contrôleur principal
 
 Usage :
     python gallery_tagger.py <chemin_vers_dossier>
@@ -43,7 +43,7 @@ import os
 import sys
 import argparse
 
-from controllers.gallery_controller import GalleryController
+from controllers.main_controller import MainController
 
 
 # =============================================================================
@@ -54,11 +54,11 @@ def parse_arguments() -> argparse.Namespace:
     """
     Parse les arguments de la ligne de commande.
 
-    Définit un argument positionnel obligatoire "dossier" (chemin vers
+    Définit un argument positionnel optionnel "dossier" (chemin vers
     un dossier d'images). Affiche l'aide et des exemples d'utilisation.
 
     Returns:
-        argparse.Namespace: Objet contenant l'attribut 'dossier' (str).
+        argparse.Namespace: Objet contenant l'attribut 'dossier' (str | None).
 
     Example:
         >>> # Appel: python gallery_tagger.py ./images
@@ -76,7 +76,7 @@ def parse_arguments() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "dossier", type=str,
+        "dossier", type=str, nargs="?",
         help="Chemin vers le dossier contenant les images.",
     )
     return parser.parse_args()
@@ -88,11 +88,10 @@ def main() -> None:
 
     Séquence :
     1. Parse les arguments CLI via parse_arguments().
-    2. Vérifie que le chemin pointe vers un dossier existant.
-    3. Affiche le dossier cible en console.
-    4. Lance GalleryController (boucle Tkinter).
+    2. Si fourni, vérifie que le chemin pointe vers un dossier existant.
+    3. Lance MainController (boucle Tkinter).
 
-    Quitte avec code 1 si le dossier est invalide.
+    Quitte avec code 1 si le dossier CLI fourni est invalide.
 
     Example:
         >>> # python gallery_tagger.py "C:/mes_images"
@@ -103,13 +102,16 @@ def main() -> None:
     args = parse_arguments()
     folder = args.dossier
 
-    if not os.path.isdir(folder):
+    if folder and not os.path.isdir(folder):
         print(f"ERREUR : '{folder}' n'est pas un dossier valide.")
         sys.exit(1)
 
-    print(f"Dossier cible : {os.path.abspath(folder)}")
+    if folder:
+        print(f"Dossier cible (CLI) : {os.path.abspath(folder)}")
+    else:
+        print("Dossier cible : config.json ou dossier courant.")
     print("Lancement de l'interface graphique…")
-    GalleryController(folder)
+    MainController(folder)
 
 
 if __name__ == "__main__":

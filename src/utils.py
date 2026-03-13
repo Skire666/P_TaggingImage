@@ -111,8 +111,8 @@ def _matches_tagged_syntax(stem: str) -> bool:
         >>> _matches_tagged_syntax("photo")
         False
     """
-    open_delim = MAIN_SEPARATOR + TAG_OPEN       # " - ["
-    close_delim = TAG_CLOSE      # "]"
+    open_delim = MAIN_SEPARATOR + TAG_OPEN            # " - ["
+    close_delim = TAG_CLOSE + MAIN_SEPARATOR          # "] - "
 
     # 1. Cherche le délimiteur ouvrant (base non-vide avant)
     open_idx = stem.find(open_delim)
@@ -125,7 +125,13 @@ def _matches_tagged_syntax(stem: str) -> bool:
     if close_idx == -1:
         return False
 
-    return True # ignore la partie après "] - " qui doit être un compteur numérique
+    # 3. Verifie la presence d'un compteur numerique apres "] - "
+    counter_start = close_idx + len(close_delim)
+    counter_part = stem[counter_start:].strip()
+    if not counter_part.isdigit():
+        return False
+
+    return True
 
 
 def is_filename_tagged(filename: str) -> bool:
@@ -189,7 +195,10 @@ def resize_image_to_fit(
         return image
 
     ratio = min(max_width / orig_w, max_height / orig_h)
-    return image.resize((int(orig_w * ratio), int(orig_h * ratio)), Image.LANCZOS)
+    return image.resize(
+        (int(orig_w * ratio), int(orig_h * ratio)),
+        Image.Resampling.LANCZOS,
+    )
 
 
 def load_image_safe(filepath: str) -> Image.Image | None:
@@ -288,8 +297,8 @@ def center_window(window: tk.Toplevel, width: int, height: int) -> None:
 
     Example:
         >>> top = tk.Toplevel(root)
-        >>> center_window(top, 420, 120)
-        # La fenêtre est centrée à l'écran avec 420x120 pixels.
+        >>> center_window(top, 450, 250)
+        # La fenêtre est centrée à l'écran avec 450x250 pixels.
     """
     sx = window.winfo_screenwidth()
     sy = window.winfo_screenheight()

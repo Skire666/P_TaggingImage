@@ -74,25 +74,26 @@ try {
     # (utile si le chemin est copié-collé depuis l'explorateur avec des guillemets).
     $FolderPath = $FolderPath.Trim('"', "'", ' ')
 
-    # Si aucun chemin n'est fourni, utiliser le répertoire courant (./).
     if ([string]::IsNullOrWhiteSpace($FolderPath)) {
-        $FolderPath = "./"
-        Write-Warning "Aucun chemin fourni, utilisation du repertoire courant : '$FolderPath'"
+        # Aucun argument : laisser l'application Python choisir
+        # (config.json, puis fallback dossier courant).
+        $ResolvedFolder = $null
+        Write-Host "Aucun dossier fourni. Utilisation de la configuration (config.json)." -ForegroundColor Yellow
+    } else {
+        # Résoudre le chemin relatif en chemin absolu.
+        # -ErrorAction Stop : lève une exception si le chemin n'existe pas.
+        $ResolvedFolder = (Resolve-Path -Path $FolderPath -ErrorAction Stop).Path
+
+        # Vérifier que le chemin résolu pointe bien vers un dossier (et non un fichier).
+        if (-not (Test-Path -Path $ResolvedFolder -PathType Container)) {
+            throw "Le chemin '$FolderPath' n'est pas un repertoire valide."
+        }
+
+        # Tenter de lire le contenu du dossier pour vérifier les permissions d'accès.
+        # On récupère un seul élément (-First 1) pour minimiser le coût de l'opération.
+        # -Force : inclut les fichiers/dossiers cachés dans la vérification.
+        $null = Get-ChildItem -Path $ResolvedFolder -Force -ErrorAction Stop | Select-Object -First 1
     }
-
-    # Résoudre le chemin relatif en chemin absolu.
-    # -ErrorAction Stop : lève une exception si le chemin n'existe pas.
-    $ResolvedFolder = (Resolve-Path -Path $FolderPath -ErrorAction Stop).Path
-
-    # Vérifier que le chemin résolu pointe bien vers un dossier (et non un fichier).
-    if (-not (Test-Path -Path $ResolvedFolder -PathType Container)) {
-        throw "Le chemin '$FolderPath' n'est pas un repertoire valide."
-    }
-
-    # Tenter de lire le contenu du dossier pour vérifier les permissions d'accès.
-    # On récupère un seul élément (-First 1) pour minimiser le coût de l'opération.
-    # -Force : inclut les fichiers/dossiers cachés dans la vérification.
-    $null = Get-ChildItem -Path $ResolvedFolder -Force -ErrorAction Stop | Select-Object -First 1
 }
 catch [System.Management.Automation.ItemNotFoundException] {
     # Le chemin fourni ne correspond à aucun élément du système de fichiers.
@@ -221,12 +222,20 @@ if (Test-Path -Path $Requirements) {
 # en argument. Le code de sortie de Python est propagé au script appelant.
 
 try {
-    Write-Host "Lancement de l'application sur : $ResolvedFolder" -ForegroundColor Cyan
+    if ($ResolvedFolder) {
+        Write-Host "Lancement de l'application sur : $ResolvedFolder" -ForegroundColor Cyan
+    } else {
+        Write-Host "Lancement de l'application avec dossier issu de la configuration." -ForegroundColor Cyan
+    }
     Write-Host ("-" * 50) -ForegroundColor DarkGray
 
     # Appel de l'interpréteur Python avec le point d'entrée et le dossier résolu.
     # L'opérateur & (call) permet d'exécuter un chemin contenant des espaces.
-    & $Python $SrcEntryPoint $ResolvedFolder
+    if ($ResolvedFolder) {
+        & $Python $SrcEntryPoint $ResolvedFolder
+    } else {
+        & $Python $SrcEntryPoint
+    }
 
     # Vérifier le code de sortie de l'application.
     # Un code différent de 0 indique une erreur côté Python.

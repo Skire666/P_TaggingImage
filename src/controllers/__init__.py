@@ -5,15 +5,26 @@
   Controllers — Paquetage des contrôleurs
 =============================================================================
 
-Expose le contrôleur principal de l'application :
-    - GalleryController : orchestre modèles et vues.
+Expose le controleur principal et les sous-controleurs :
+    - MainController    : controleur global.
+    - ConfigController  : gestion de la configuration.
+    - FileController    : gestion des fichiers et tags.
+    - ViewController    : gestion de la vue.
 
 Example:
-    >>> from controllers import GalleryController
+    >>> from controllers import MainController
 """
 
 from __future__ import annotations
 
-from controllers.gallery_controller import GalleryController
+from controllers.main_controller import MainController
+from controllers.config_controller import ConfigController
+from controllers.file_controller import FileController
+from controllers.view_controller import ViewController
 
-__all__ = ["GalleryController"]
+__all__ = [
+    "MainController",
+    "ConfigController",
+    "FileController",
+    "ViewController",
+]

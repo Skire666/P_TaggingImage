@@ -23,6 +23,7 @@ Le drag & drop de dossiers est supporté grâce à `tkinterdnd2`, et la fenêtre
 ```
 tagger3k/
 ├── Launchme.ps1                # Script PowerShell de lancement (Python 3.10+)
+├── config.json                 # Configuration persistante (dernier dossier)
 └── src/
     ├── gallery_tagger.py       # Point d’entrée CLI (argparse)
     ├── constants.py            # Configuration centralisée
@@ -30,10 +31,11 @@ tagger3k/
     ├── requirements.txt        # Dépendances pip (Pillow, tkinterdnd2)
     ├── controllers/
     │   ├── __init__.py
-    │   └── gallery_controller.py   # Contrôleur principal
+    │   └── main_controller.py      # Contrôleur principal
     ├── models/
     │   ├── __init__.py
     │   ├── file_model.py       # Gestion de la liste de fichiers
+    │   ├── config_model.py     # Gestion de la configuration JSON
     │   └── tag_model.py        # Extraction et comptage des tags
     └── views/
         ├── __init__.py
@@ -67,10 +69,14 @@ Utilisateur  →  Vue (événements)  →  Contrôleur (logique)  →  Modèles 
 
 ### `gallery_tagger.py` (point d’entrée)
 
-- Parse les arguments CLI via `argparse` (un argument positionnel : chemin du dossier).
-- Valide l’existence du dossier.
-- Instancie `GalleryController(folder)` qui crée et gère tout en interne.
+- Parse les arguments CLI via `argparse` (un argument positionnel optionnel : chemin du dossier).
+- Si le dossier est fourni, valide son existence.
+- Instancie `MainController(folder)` qui cree et gere tout en interne.
 - Le contrôleur crée la fenêtre `TkinterDnD.Tk()` et lance `mainloop()`.
+
+Sans argument, la sélection du dossier est déléguée au contrôleur selon :
+1. `last_opened_folder` dans `config.json` (si valide)
+2. dossier courant (fallback)
 
 ### `constants.py` (configuration)
 
@@ -79,9 +85,9 @@ Contient **toutes** les valeurs paramétrables :
 | Catégorie         | Constantes clés                                                                 |
 |--------------------|-------------------------------------------------------------------------------------|
 | **Extensions**     | `SUPPORTED_EXTENSIONS` (frozenset de 8 formats)                                     |
-| **Dimensions**     | `LOADING_WIN_SIZE` (420×120), `FOOTER_PX` (190 px), `GALLERY_COL_WEIGHTS` (`[2, 6, 2]`) |
+| **Dimensions**     | `LOADING_WIN_SIZE` (450×250), `FOOTER_PX` (190 px), `GALLERY_COL_WEIGHTS` (`[2, 6, 2]`) |
 | **Tailles fenêtre** | `MIN_WIN_WIDTH` (300), `MIN_WIN_HEIGHT` (300)                                       |
-| **Limites**        | `MAX_PATH_LEN` (235), `MAX_FILENAME_LEN` (120)                                     |
+| **Limites**        | `max_path_len` et `max_filename_len` via `config.json` (defauts 220/110)            |
 | **Séparateurs**    | `MAIN_SEPARATOR` (` - `), `TAG_SEPARATOR` (`, `), `TAG_OPEN` (`[`), `TAG_CLOSE` (`]`) |
 | **Couleurs**       | Palette Catppuccin Mocha (voir section Thème visuel)                               |
 | **Polices**        | `FONT_SM`, `FONT_SM_BOLD`, `FONT_SM_ITALIC`, `FONT_MD`, `FONT_MD_BOLD`, `FONT_LG_BOLD` (famille `Segoe UI`, taille 11) |
@@ -137,6 +143,21 @@ Gère une **liste ordonnée de fichiers** et un **index de navigation** :
 | `find_next_untagged()` | Cherche le prochain fichier non conforme au format |
 | `file_exists(name)`    | Vérifie l’existence d’un fichier dans le dossier      |
 
+### `models/config_model.py`
+
+Gère la persistance de la configuration dans `config.json` :
+
+| Méthode                        | Description                                               |
+|--------------------------------|-----------------------------------------------------------|
+| `ensure_exists()`              | Crée `config.json` par défaut s'il n'existe pas           |
+| `load()`                       | Charge/normalise la configuration, fallback en cas d'erreur |
+| `get_last_opened_folder()`     | Retourne le dernier dossier enregistre                    |
+| `set_last_opened_folder(path)` | Met a jour la config avec le dossier absolu              |
+| `get_max_path_len()`           | Retourne la limite de longueur de chemin (defaut 220)     |
+| `set_max_path_len(value)`      | Met a jour la limite de longueur de chemin               |
+| `get_max_filename_len()`       | Retourne la limite de longueur de nom fichier (defaut 110) |
+| `set_max_filename_len(value)`  | Met a jour la limite de longueur de nom fichier          |
+
 ### `models/tag_model.py`
 
 Construit un `OrderedDict[str, int]` de tags triés :
@@ -155,7 +176,7 @@ Construit toute l’interface sans logique métier. Expose des **variables Tkint
 | Zone        | Composants                                                        |
 |-------------|-------------------------------------------------------------------|
 | **Galerie** | 3 `LabelFrame` avec `Label` pour images, pondération `[2, 6, 2]` |
-| **Info bar** | Nom du fichier, index, boutons navigation (Précédent, Suivant, Prochain non-taggué), bouton explorateur |
+| **Info bar** | Nom du fichier, index, boutons navigation (Précédent, Suivant, Prochain à tagguer), bouton explorateur |
 | **Tags**    | Widget `tk.Text` (wrap="char") avec `Checkbutton` dynamiques intégrés, défilement vertical via `ttk.Scrollbar` |
 | **Rename**  | Entry (nouveau nom), Label (extension), Label (aperçu), Labels (longueurs), label format, bouton renommer |
 
@@ -172,7 +193,7 @@ Fenêtre modale `Toplevel` avec :
 - Méthode `update(current, total)` appelée par le contrôleur.
 - Méthode `close()` pour libérer le grab et détruire la fenêtre.
 
-### `controllers/gallery_controller.py`
+### `controllers/main_controller.py`
 
 Orchestre l’ensemble de l’application (~845 lignes) :
 
@@ -180,7 +201,8 @@ Orchestre l’ensemble de l’application (~845 lignes) :
 
 | Méthode                      | Rôle                                                            |
 |--------------------------------|-----------------------------------------------------------------|
-| `__init__(folder_path)`        | Crée les modèles, la fenêtre, charge les fichiers/tags, construit la vue, lance `mainloop()` |
+| `__init__(folder_path)`        | Crée les modèles (fichiers, tags, config), résout le dossier de départ, charge les fichiers/tags, construit la vue, lance `mainloop()` |
+| `_resolve_start_folder(path)`  | Choisit le dossier initial (CLI > config > cwd) et le persiste |
 | `_init_window()`               | Crée `TkinterDnD.Tk()`, configure titre/fond/taille, maximise  |
 | `_load_files_or_warn()`        | Charge les fichiers, avertit si dossier vide/inaccessible       |
 | `_build_tags_with_progress()`  | Construit les tags avec `LoadingView` comme callback            |
@@ -276,6 +298,7 @@ La méthode `_reload_folder()` réinitialise complètement l’état :
 4. Libère les références d’images (`_img_refs`).
 5. Reconstruit les checkboxes et rafraîchit l’affichage.
 6. Met à jour le titre de la fenêtre.
+7. Sauvegarde le dernier dossier ouvert dans `config.json`.
 
 ---
 
@@ -304,24 +327,26 @@ L’application utilise la palette **Catppuccin Mocha** :
 ## Séquence de démarrage
 
 ```
-1. gallery_tagger.py : argparse → validation du dossier
-2. GalleryController(folder_path) :
-   a. Création de FileModel, TagModel
-   b. _init_window() → TkinterDnD.Tk(), titre, taille, maximize
-   c. _load_files_or_warn() → scanne le dossier
-   d. _build_tags_with_progress()
+1. gallery_tagger.py : argparse → validation du dossier si argument fourni
+2. MainController(folder_path) :
+    a. Création de ConfigModel
+    b. `_resolve_start_folder()` : CLI > config > dossier courant
+    c. Création de FileModel, TagModel
+    d. _init_window() → TkinterDnD.Tk(), titre, taille, maximize
+    e. _load_files_or_warn() → scanne le dossier
+    f. _build_tags_with_progress()
       ├─ LoadingView.show()
       ├─ TagModel.build(files, loading.update)
       └─ LoadingView.close()
-   e. _build_view() → GalleryView(root, callbacks)
-   f. _trace_new_name() → observe new_name_var
-   g. _bind_shortcuts() → <Return>
-   h. _bind_drop() → tkinterdnd2 DND_FILES
-   i. root.after_idle(_initial_display)
+    g. _build_view() → GalleryView(root, callbacks)
+    h. _trace_new_name() → observe new_name_var
+    i. _bind_shortcuts() → <Return>
+    j. _bind_drop() → tkinterdnd2 DND_FILES
+    k. root.after_idle(_initial_display)
       ├─ _display_current()
       ├─ view.build_tag_checkboxes()
       └─ _bind_gallery_resize()
-   j. root.mainloop()
+    l. root.mainloop()
 ```
 
 ---
@@ -331,4 +356,4 @@ L’application utilise la palette **Catppuccin Mocha** :
 - **Windows uniquement** pour l’ouverture dans l’Explorateur (`explorer /select`).
 - **Pas de multi-threading** : le chargement des tags bloque l’interface (atténué par `update_idletasks` dans la barre de progression).
 - **Plage de compteurs limitée** : 1000 – 9999 (10 000 noms uniques par base), valeurs codées en dur dans le contrôleur.
-- **Pas de persistance** : les réglages et l’historique ne sont pas sauvegardés entre les sessions.
+- **Persistance limitée** : seules les cles `last_opened_folder`, `max_path_len` et `max_filename_len` sont sauvegardees actuellement.

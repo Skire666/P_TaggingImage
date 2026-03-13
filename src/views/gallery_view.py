@@ -17,10 +17,10 @@ Layout :
     - Haut  : galerie triptyque (3 cadres 25%/50%/25%), hauteur libre.
     - Bas   : footer fixe 500 px contenant :
         - Ligne 1 : barre d'info (explorateur | titre | nav)
-        - Ligne 2 : tags (50%) | renommage (50%)
+        - Ligne 2 : tags | renommage
 
 Example:
-    >>> view = GalleryView(root, tag_dict, callbacks)
+    >>> view = GalleryView(root, callbacks)
     >>> view.info_var.set("'photo.png'     -     1 / 5")
 """
 
@@ -29,13 +29,13 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 from collections import OrderedDict
-from typing import Callable
+from typing import Any, Callable, Mapping
 
 from constants import (
     BG_COLOR, FG_COLOR, ACCENT_COLOR, FRAME_BG,
     ENTRY_BG, ENTRY_FG, CHECK_BG, CHECK_FG,
     HIGHLIGHT, BTN_STYLE, BTN_APPLY_STYLE,
-    FOOTER_PX, GALLERY_COL_WEIGHTS,
+    FOOTER_PX, GALLERY_COL_WEIGHTS, FOOTER_COL_WEIGHTS,
     FONT_FAMILY, FONT_SM, FONT_SM_BOLD, FONT_SM_ITALIC,
     FONT_MD, FONT_MD_BOLD, FONT_LG_BOLD,
 )
@@ -56,13 +56,13 @@ class GalleryView:
         check_vars:       { tag: BooleanVar } pour les cases à cocher.
 
     Example:
-        >>> view = GalleryView(root, tag_dict, callbacks)
+        >>> view = GalleryView(root, callbacks)
     """
 
     def __init__(
         self,
         root: tk.Tk,
-        callbacks: dict[str, Callable],
+        callbacks: Mapping[str, Callable[..., Any]],
     ) -> None:
         """
         Construit l'intégralité de l'interface graphique.
@@ -74,13 +74,14 @@ class GalleryView:
                        - "go_next"     : navigation avant
                        - "apply_rename": renommage
                        - "open_explorer": ouvrir l'explorateur
+                       - "reload_current_folder": recharger le dossier courant
                        - "on_tag_toggled": tag coché/décoché
 
         Example:
             >>> view = GalleryView(root, callbacks)
         """
         self.root = root
-        self.callbacks = callbacks
+        self.callbacks = dict(callbacks)
         self.check_vars: dict[str, tk.BooleanVar] = {}
 
         # --- Footer (packé en premier pour réserver l'espace) ---
@@ -172,7 +173,7 @@ class GalleryView:
 
         Organisation interne en grille :
             - Ligne 0  : barre d'information (columnspan 2)
-            - Ligne 1  : tags (col 0, 50%) | renommage (col 1, 50%)
+            - Ligne 1  : tags | renommage
 
         Returns:
             tk.Frame: Frame footer prêt à recevoir ses enfants.
@@ -182,8 +183,8 @@ class GalleryView:
         frame.pack_propagate(False)
         frame.grid_propagate(False)
 
-        frame.columnconfigure(0, weight=1, uniform="footer_half")
-        frame.columnconfigure(1, weight=1, uniform="footer_half")
+        frame.columnconfigure(0, weight=FOOTER_COL_WEIGHTS[0], uniform="footer_split")
+        frame.columnconfigure(1, weight=FOOTER_COL_WEIGHTS[1], uniform="footer_split")
         frame.rowconfigure(0, weight=0)
         frame.rowconfigure(1, weight=1)
         return frame
@@ -212,6 +213,11 @@ class GalleryView:
             command=self.callbacks["open_explorer"], **BTN_STYLE,
         ).pack(side=tk.LEFT, padx=(0, 10))
 
+        tk.Button(
+            bar, text="↻  Recharger",
+            command=self.callbacks["reload_current_folder"], **BTN_STYLE,
+        ).pack(side=tk.LEFT, padx=(0, 10))
+
         self.info_var = tk.StringVar(value="")
         tk.Label(
             bar, textvariable=self.info_var,
@@ -228,12 +234,12 @@ class GalleryView:
             command=self.callbacks["go_previous"], **BTN_STYLE,
         ).pack(side=tk.RIGHT, padx=(5, 0))
         tk.Button(
-            bar, text="🔍  Prochain non-taggué",
+            bar, text="🔍  Prochain à tagguer",
             command=self.callbacks["go_next_untagged"], **BTN_STYLE,
         ).pack(side=tk.RIGHT, padx=(5, 0))
 
     # =================================================================
-    #  Ligne 2 du footer — Tags (gauche, 50 %)
+    #  Ligne 2 du footer — Tags (gauche)
     # =================================================================
 
     def _build_tags_panel(self, parent: tk.Frame) -> None:
@@ -266,14 +272,14 @@ class GalleryView:
         self._tags_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
     # =================================================================
-    #  Ligne 2 du footer — Renommage (droite, 50 %)
+    #  Ligne 2 du footer — Renommage (droite)
     # =================================================================
 
     def _build_rename_panel(self, parent: tk.Frame) -> None:
         """
         Construit le panneau de renommage.
 
-        Placé dans la ligne 2 du footer (colonne 1, 50 % de largeur).
+        Placé dans la ligne 2 du footer (colonne 1).
 
         Args:
             parent: Frame footer.
@@ -318,7 +324,7 @@ class GalleryView:
 
         # --- Ligne 3 : Longueurs + Bouton Appliquer ---
         row3 = tk.Frame(outer, bg=FRAME_BG)
-        row3.pack(side=tk.TOP, fill=tk.X, padx=8, pady=(4, 8))
+        row3.pack(side=tk.TOP, fill=tk.X, padx=8, pady=(0, 0))
 
         # Longueur totale du chemin
         self.path_len_var = tk.StringVar(value="")
@@ -328,8 +334,8 @@ class GalleryView:
         ).pack(side=tk.LEFT)
         tk.Label(
             row3, textvariable=self.path_len_var, bg=FRAME_BG,
-            fg=ACCENT_COLOR, font=FONT_SM_BOLD, width=5, anchor="w",
-        ).pack(side=tk.LEFT, padx=(2, 10))
+            fg=ACCENT_COLOR, font=FONT_SM_BOLD, width=4, anchor="w",
+        ).pack(side=tk.LEFT)
 
         # Longueur du fichier avec extension
         self.filename_len_var = tk.StringVar(value="")
@@ -339,11 +345,11 @@ class GalleryView:
         ).pack(side=tk.LEFT)
         tk.Label(
             row3, textvariable=self.filename_len_var, bg=FRAME_BG,
-            fg=ACCENT_COLOR, font=FONT_SM_BOLD, width=5, anchor="w",
-        ).pack(side=tk.LEFT, padx=(2, 10))
+            fg=ACCENT_COLOR, font=FONT_SM_BOLD, width=4, anchor="w",
+        ).pack(side=tk.LEFT)
 
         tk.Label(
-            row3, text="Format : 'base - [tags] - count'", bg=FRAME_BG, fg=FG_COLOR,
+            row3, text="Forme : 'base - [tags] - count'", bg=FRAME_BG, fg=FG_COLOR,
             font=FONT_SM,
         ).pack(side=tk.LEFT)
 
@@ -389,8 +395,12 @@ class GalleryView:
     #  Méthodes d'affichage pour le contrôleur
     # =================================================================
 
-    def set_image(self, label: tk.Label, photo: tk.PhotoImage | None,
-                  fallback_text: str = "") -> None:
+    def set_image(
+        self,
+        label: tk.Label,
+        photo: Any | None,
+        fallback_text: str = "",
+    ) -> None:
         """
         Affiche une image dans un label, ou un texte de remplacement.
 

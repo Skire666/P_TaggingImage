@@ -18,6 +18,12 @@ base - [tag1, tag2, tag3] - 1000.png
 python gallery_tagger.py <chemin_vers_dossier>
 ```
 
+Le chemin est optionnel :
+
+```bash
+python gallery_tagger.py
+```
+
 L’application scanne le dossier fourni, charge toutes les images reconnues, puis ouvre la fenêtre graphique maximisée.
 
 Un script PowerShell `Launchme.ps1` est également fourni pour automatiser la vérification de Python, l’installation des dépendances et le lancement :
@@ -25,6 +31,38 @@ Un script PowerShell `Launchme.ps1` est également fourni pour automatiser la v�
 ```powershell
 .\Launchme.ps1 "C:\chemin\vers\dossier"
 ```
+
+Le chemin est aussi optionnel avec le script :
+
+```powershell
+.\Launchme.ps1
+```
+
+Sans chemin fourni, l'application démarre sur le dernier dossier ouvert enregistré,
+ou sur le dossier courant si aucune valeur valide n'est disponible.
+
+### Configuration persistante (`config.json`)
+
+Un fichier `config.json` est stocké à la racine du projet.
+
+- S'il n'existe pas, il est généré automatiquement avec une configuration par défaut.
+- S'il existe, il est chargé au démarrage et utilisé.
+- Cles supportees : `last_opened_folder`, `max_path_len`, `max_filename_len`.
+
+Exemple :
+
+```json
+{
+   "last_opened_folder": "C:\\Users\\moi\\Pictures",
+   "max_path_len": 220,
+   "max_filename_len": 110
+}
+```
+
+Priorité du dossier chargé au démarrage :
+- dossier passé en argument CLI (si valide)
+- sinon `last_opened_folder` (si valide)
+- sinon dossier courant
 
 ---
 
@@ -47,7 +85,7 @@ L’écran principal affiche trois images côte à côte :
 ### 2. Navigation
 
 - **Boutons « Précédent » / « Suivant »** dans la barre d’information.
-- **Bouton « Prochain non-taggué »** : saute au prochain fichier dont le nom ne respecte pas le format `base - [tags] - compteur.ext`. Si tous les fichiers sont conformes, un message informatif est affiché.
+- **Bouton « Prochain à tagguer »** : saute au prochain fichier dont le nom ne respecte pas le format `base - [tags] - compteur.ext`. Si tous les fichiers sont conformes, un message informatif est affiché.
 - **Clic sur les panneaux latéraux** de la galerie.
 - La navigation est **cyclique** : après la dernière image, on revient à la première.
 
@@ -102,8 +140,8 @@ Le processus de renommage suit cette séquence :
 2. **Validation** : le nom doit différer de l’original.
 3. **Résolution de conflit** : si le nom existe déjà, le compteur est incrémenté (1001, 1002…).
 4. **Vérification de longueur** :
-   - Avertissement si le chemin complet dépasse **235 caractères**.
-   - Avertissement si le nom de fichier seul dépasse **120 caractères**.
+   - Avertissement si le chemin complet dépasse **220 caractères**.
+   - Avertissement si le nom de fichier seul dépasse **110 caractères**.
    - Dans les deux cas, l’utilisateur peut choisir de continuer ou d’annuler.
 5. **Exécution** : renommage effectif sur le disque.
 6. **Rafraîchissement** : les tags sont recalculés, les cases à cocher et l’affichage sont mis à jour.
@@ -125,6 +163,7 @@ Il est possible de glisser-déposer un dossier depuis l’Explorateur Windows di
 3. Le dictionnaire de tags est reconstruit (avec barre de progression).
 4. Les cases à cocher, l’affichage et le titre de la fenêtre sont mis à jour.
 5. Si le dossier déposé est vide ou ne contient aucune image, un avertissement est affiché et le dossier précédent reste actif.
+6. Le dossier chargé est enregistré comme dernier dossier ouvert dans `config.json`.
 
 ### 10. Explorateur Windows
 
@@ -147,9 +186,11 @@ Lors du chargement d’un dossier (au démarrage ou par drag & drop), une barre 
 - **Dossier vide** : avertissement affiché ; l’application reste ouverte.
 - **Dossier invalide** : erreur et arrêt en ligne de commande.
 - **Dossier inaccessible** : messagebox d’erreur.
+- **Configuration absente** : `config.json` est créé automatiquement.
+- **Configuration invalide** : valeurs par défaut réappliquées automatiquement.
 - **Image non chargeable** : texte de substitution affiché dans le panneau (`[Image non chargeable]` ou `[?]`).
 - **Nom sans crochets** : les tags sont considérés comme vides, la partie gauche est conservée.
 - **Conflit de noms** : incrémentation automatique du compteur (1000 → 9999).
 - **Compteurs épuisés** : messagebox d’erreur si les 10 000 noms sont pris.
 - **Chemin trop long** : avertissement avec possibilité de continuer.
-- **Tous les fichiers conformes** : message informatif quand « Prochain non-taggué » ne trouve rien.
+- **Tous les fichiers conformes** : message informatif quand « Prochain à tagguer » ne trouve rien.
