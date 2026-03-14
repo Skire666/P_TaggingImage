@@ -95,7 +95,7 @@ Affiche en permanence une barre en haut du footer contenant :
 
 - **Bouton « ↻  Recharger gallerie »** : recharge les images du dossier courant.
 - **Bouton « 📁  Ouvrir un dossier »** : ouvre un sélecteur pour choisir un nouveau dossier.
-- Au **centre** : le **nom du fichier courant** entre guillemets et l'**index** du fichier dans la liste (ex : `'photo.png'     [ 3 / 42 ]`).
+- Au **centre** : le **nom du fichier courant** entre guillemets et l'**index** du fichier dans la liste
 - **Bouton « 📁  Localiser dans l'explorateur »** : ouvre l'explorateur Windows avec le fichier courant pré-sélectionné.
 - **Bouton « 🔍  Prochain à tagguer »** (à droite) : saute au prochain fichier non-conforme.
 
