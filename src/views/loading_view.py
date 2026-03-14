@@ -15,17 +15,24 @@ Example:
     >>> loading.close()
 """
 
-from __future__ import annotations
+# =============================================================================
+# import / from
+# =============================================================================
 
 import tkinter as tk
 from tkinter import ttk
 
 from constants import (
-    BG_COLOR, FG_COLOR, FRAME_BG, ACCENT_COLOR, LOADING_WIN_SIZE,
-    FONT_MD,
+    BG_COLOR, FG_COLOR, FRAME_BG, ACCENT_COLOR, LOADING_WIN_SIZE, FONT_MD,
 )
 from utils import center_window
 
+# =============================================================================
+#  SÉPARATEURS (ex: 'base - [tags] - 1000')
+# =============================================================================
+
+TAG_OPEN: str = " - ["
+"""Délimiteur ouvrant de la liste de tags."""
 
 class LoadingView:
     """

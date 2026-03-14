@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import json
 import os
-
+from typing import cast
 
 class ConfigModel:
     """Modele d'acces a la configuration persistante.
@@ -31,10 +31,15 @@ class ConfigModel:
         valeurs par defaut en cas de contenu invalide.
     """
 
+
+    # Valeurs par défaut pour la configuration
+    DEFAULT_PATH_STR: str = ""
     DEFAULT_PATH_LEN: int = 220
     DEFAULT_FILENAME_LEN: int = 110
+    
+    # Dictionnaire de configuration par défaut
     DEFAULT_DATA: dict[str, str | int] = {
-        "last_opened_folder": "",
+        "last_opened_folder": DEFAULT_PATH_STR,
         "max_path_len": DEFAULT_PATH_LEN,
         "max_filename_len": DEFAULT_FILENAME_LEN,
     }
@@ -46,31 +51,53 @@ class ConfigModel:
         Args:
             config_path: Chemin du fichier de config. Si None,
                          utilise la racine du projet.
+
+        Notes:
+        - Si config_path est None, le modèle cherche config.json à la racine du projet
+        - Si le fichier n'existe pas, il est créé avec les valeurs par défaut.
         """
+
+        self._config_path = ""
+        self._cached_data: dict[str, str | int] | None = None
+        self._last_mtime: float = 0.0
+
+        # Détermine le chemin du fichier de configuration
         if config_path is None:
+            # remonte de 3 niveaux pour atteindre la racine du projet
             project_root = os.path.dirname(
                 os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             )
             config_path = os.path.join(project_root, "config.json")
 
-        self.config_path = config_path
+        self._config_path = config_path
+
+        # garantit que le fichier de configuration existe dès l'initialisation
         self.ensure_exists()
 
     def ensure_exists(self) -> None:
-        """Cree le fichier de configuration s'il n'existe pas."""
-        folder = os.path.dirname(self.config_path)
+        """
+        Cree le fichier de configuration s'il n'existe pas.
+
+        Notes:
+        - Si le dossier parent n'existe pas, il est créé.
+        - Si le fichier n'existe pas, il est créé avec les valeurs par défaut.
+        """
+
+        # Si le dossier parent n'existe pas, le crée
+        folder = os.path.dirname(self._config_path)
         if folder:
             os.makedirs(folder, exist_ok=True)
 
-        if not os.path.exists(self.config_path):
-            self._write(self.DEFAULT_DATA)
+        # Si le fichier n'existe pas, le crée avec les valeurs par défaut
+        if not os.path.exists(self._config_path):
+            self._save_json(self.DEFAULT_DATA)
 
-    def load(self) -> dict[str, str | int]:
+    def load_file_json(self) -> dict[str, str | int]:
         """
         Charge la configuration depuis le fichier JSON.
 
-        Si le fichier est invalide ou incomplet, le modèle réinitialise
-        les valeurs manquantes avec les valeurs par défaut.
+        Notes:
+        - Si le fichier est invalide ou incomplet, le modèle réinitialise avec les valeurs par défaut.
 
         Returns:
             dict[str, str | int]: Configuration normalisee.
@@ -78,110 +105,125 @@ class ConfigModel:
         self.ensure_exists()
 
         try:
-            with open(self.config_path, "r", encoding="utf-8") as f:
+            current_mtime = os.path.getmtime(self._config_path)
+        except OSError:
+            current_mtime = 0.0
+
+        if self._cached_data is not None and current_mtime <= self._last_mtime:
+            return self._cached_data
+
+        try:
+            # Lit le contenu du fichier JSON
+            with open(self._config_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
         except (OSError, json.JSONDecodeError):
+            # En cas d'erreur de lecture ou de parsing, réinitialise avec les valeurs par défaut
             data = dict(self.DEFAULT_DATA)
-            self._write(data)
+            self._save_json(data)
             return data
 
         if not isinstance(data, dict):
             data = dict(self.DEFAULT_DATA)
 
-        merged = dict(self.DEFAULT_DATA)
+        merged = cast("dict[str, str | int]", data.copy())
+        needs_save = False # indique si une sauvegarde est nécessaire après la validation des clés
 
-        folder = data.get("last_opened_folder")
-        if isinstance(folder, str):
-            merged["last_opened_folder"] = folder
+        # Valide la présence et le type de chaque clé attendue
+        for key, default_val in self.DEFAULT_DATA.items():
+            # Si la clé est absente ou de type incorrect, la réinitialise à la valeur par défaut
+            if key not in merged or not isinstance(merged[key], type(default_val)):
+                merged[key] = default_val
+                needs_save = True
 
-        max_path_len = data.get("max_path_len")
-        if isinstance(max_path_len, int) and max_path_len > 0:
-            merged["max_path_len"] = max_path_len
-
-        max_filename_len = data.get("max_filename_len")
-        if isinstance(max_filename_len, int) and max_filename_len > 0:
-            merged["max_filename_len"] = max_filename_len
-
-        if merged != data:
-            self._write(merged)
+        # sauvegarde uniquement si des corrections ont été apportées pour éviter les écritures inutiles
+        if needs_save:
+            self._save_json(merged)
+        
+        self._cached_data = merged
+        self._last_mtime = current_mtime
 
         return merged
 
-    def get_last_opened_folder(self) -> str:
-        """Retourne le dernier dossier ouvert.
+    def _get_value(self, key: str, default: str | int | None = None) -> str | int | None:
+        """Retourne la valeur associée à la clé, ou la valeur par défaut.
+        
+        Args:
+            key: Clé de configuration.
+            default: Valeur par défaut.
 
         Returns:
-            str: Chemin absolu du dernier dossier, ou chaine vide.
+            La valeur stockée, ou la valeur par défaut si absente.
         """
-        data = self.load()
-        value = data.get("last_opened_folder", "")
-        return value if isinstance(value, str) else ""
+        data = self.load_file_json()
+        if key in data:
+            return data[key]
+        return default if default is not None else self.DEFAULT_DATA.get(key)
 
-    def set_last_opened_folder(self, folder_path: str) -> None:
-        """Met a jour et sauvegarde le dernier dossier ouvert.
-
+    def _set_value(self, key: str, value: str | int) -> None:
+        """Met à jour la valeur associée à la clé et la sauvegarde sur disque.
+        
         Args:
-            folder_path: Dossier a persister. Une chaine vide efface la valeur.
+            key: Clé de configuration.
+            value: Nouvelle valeur.
         """
-        data = self.load()
-        data["last_opened_folder"] = os.path.abspath(folder_path) if folder_path else ""
-        self._write(data)
+        data = self.load_file_json()
+        data[key] = value
+        self._save_json(data)
 
-    def get_max_path_len(self) -> int:
-        """Retourne la limite de longueur de chemin configuree.
-
-        Returns:
-            int: Valeur strictement positive. Defaut: 220.
-        """
-        data = self.load()
-        value = data.get("max_path_len", self.DEFAULT_PATH_LEN)
-        return value if isinstance(value, int) and value > 0 else self.DEFAULT_PATH_LEN
-
-    def set_max_path_len(self, max_path_len: int) -> None:
-        """Met a jour la limite de longueur de chemin.
-
-        Args:
-            max_path_len: Limite strictement positive.
-        """
-        if max_path_len <= 0:
-            return
-
-        data = self.load()
-        data["max_path_len"] = max_path_len
-        self._write(data)
-
-    def get_max_filename_len(self) -> int:
-        """Retourne la limite de longueur de nom de fichier configuree.
-
-        Returns:
-            int: Valeur strictement positive. Defaut: 110.
-        """
-        data = self.load()
-        value = data.get("max_filename_len", self.DEFAULT_FILENAME_LEN)
-        return (
-            value
-            if isinstance(value, int) and value > 0
-            else self.DEFAULT_FILENAME_LEN
-        )
-
-    def set_max_filename_len(self, max_filename_len: int) -> None:
-        """Met a jour la limite de longueur de nom de fichier.
-
-        Args:
-            max_filename_len: Limite strictement positive.
-        """
-        if max_filename_len <= 0:
-            return
-
-        data = self.load()
-        data["max_filename_len"] = max_filename_len
-        self._write(data)
-
-    def _write(self, data: dict[str, str | int]) -> None:
+    def _save_json(self, data: dict[str, str | int]) -> None:
         """Ecrit la configuration sur disque en JSON lisible.
 
         Args:
             data: Dictionnaire de configuration a serialiser.
         """
-        with open(self.config_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+        with open(self._config_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+        
+        # Met à jour le cache et la date de modification après sauvegarde
+        self._cached_data = cast("dict[str, str | int]", data.copy())
+        try:
+            self._last_mtime = os.path.getmtime(self._config_path)
+        except OSError:
+            self._last_mtime = 0.0
+
+    # =============================================================================
+    # Propriétés
+    # =============================================================================
+
+    # last_opened_folder
+    @property
+    def last_opened_folder(self) -> str:
+        """Retourne le dernier dossier ouvert."""
+        val = self._get_value("last_opened_folder", self.DEFAULT_PATH_STR)
+        return str(val) if val is not None else self.DEFAULT_PATH_STR
+
+    @last_opened_folder.setter
+    def last_opened_folder(self, value: str) -> None:
+        """Définit le dernier dossier ouvert."""
+        self._set_value("last_opened_folder", value)
+
+    # max_path_len
+    @property
+    def max_path_len(self) -> int:
+        """Retourne la longueur maximale d'un chemin."""
+        val = self._get_value("max_path_len", self.DEFAULT_PATH_LEN)
+        return int(val) if val is not None else self.DEFAULT_PATH_LEN
+
+    @max_path_len.setter
+    def max_path_len(self, value: int) -> None:
+        """Définit la longueur maximale d'un chemin."""
+        self._set_value("max_path_len", value)
+
+    # max_filename_len
+    @property
+    def max_filename_len(self) -> int:
+        """Retourne la longueur maximale pour un nom de fichier."""
+        val = self._get_value("max_filename_len", self.DEFAULT_FILENAME_LEN)
+        return int(val) if val is not None else self.DEFAULT_FILENAME_LEN
+
+    @max_filename_len.setter
+    def max_filename_len(self, value: int) -> None:
+        """Définit la longueur maximale pour un nom de fichier."""
+        self._set_value("max_filename_len", value)
+
+# END

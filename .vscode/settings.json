@@ -9,6 +9,7 @@
         "/^python refactor\\.py$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "Out-File": true
     }
 }

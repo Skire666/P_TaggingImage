@@ -1,0 +1,63 @@
+
+IHM, modifier espace renommage :
+- Nom actuel (lecture seul)
+- Nom de la base
+- Tags éditer (sans crochet ni tiret)
+- Nom final
+- Garder longeur chemin, longueur fichier, extension
+
+----------------
+
+lorsque je split les tags, pensait a faire des trims (espace blanc)
+spliter sur ',' seulement, gérer espace dynamiquement
+gérer minuscule, et double espace.
+
+----------------
+
+Optimier expérience
+arrete de faire poper une fenetre de succès
+just une sticky note qui disparait
+par contre, garder les fenetre bloquant en cas d'erreur
+
+----------------
+
+Log qui liste tous
+Permet de tracer
+voir de debug aussi
+
+indique le lancement, ce qui a été trouvé
+indique le renomage, qui à ouvert quoi, qui a chargé quoi
+chaque bouton cliqué, avec les dernières actions (oui non)
+
+Bonus :
+Si possible, en fonction de l'action
+Associer un rollback pour annuler/reverse l'effet de l'action
+
+----------------
+
+Au runtime, si rien (pas d'image, ou pas de dossier)
+Proposer un menu pour :
+- ouvrrir un autre dossier.
+- proposer le drag and drop
+
+----------------
+
+Concernant les cases à cocher :
+
+- un bouton trier : 2 modes -> soit par ordre alphabétique, soit bouton trier par nbr d'usage actuel
+- Ajouter un champ texte pour filtrer et faciliter la recherche d'un tag
+
+----------------
+
+Proposer auto-étiquetage d'image via IA.
+
+Fournir l'image à une IA
+trouve les tags qui identifie le mieux
+corrige les tags trouvés avec des synonymes pré-inscrit dans un fichier de conf
+
+----------------
+
+Tutoriel pour rappeler usage.
+Notament drag and drop, etc...
+
+// FIN

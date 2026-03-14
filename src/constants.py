@@ -33,10 +33,10 @@ SUPPORTED_EXTENSIONS: frozenset[str] = frozenset({
 #  DIMENSIONS
 # =============================================================================
 
-LOADING_WIN_SIZE: tuple[int, int] = (450, 250)
+LOADING_WIN_SIZE: tuple[int, int] = (450, 350)
 """Dimensions (largeur, hauteur) de la fenêtre de chargement en pixels."""
 
-FOOTER_PX: int = 195
+FOOTER_PX: int = 200
 """Hauteur fixe du footer en pixels."""
 
 GALLERY_COL_WEIGHTS: list[int] = [20, 60, 20]
@@ -122,24 +122,23 @@ SUCCESS_FG: str = "#1e1e2e"
 FONT_FAMILY: str = "Segoe UI"
 """Famille de police utilisée dans toute l'application."""
 
-FONT_SM: tuple = (FONT_FAMILY, 11)
+FONT_SM: tuple[str, int] = (FONT_FAMILY, 11)
 """Police standard petite (taille 11)."""
 
-FONT_SM_BOLD: tuple = (FONT_FAMILY, 11, "bold")
+FONT_SM_BOLD: tuple[str, int, str] = (FONT_FAMILY, 11, "bold")
 """Police petite grasse (taille 11, bold)."""
 
-FONT_SM_ITALIC: tuple = (FONT_FAMILY, 11, "italic")
+FONT_SM_ITALIC: tuple[str, int, str] = (FONT_FAMILY, 11, "italic")
 """Police petite italique (taille 11, italic)."""
 
-FONT_MD: tuple = (FONT_FAMILY, 11)
+FONT_MD: tuple[str, int] = (FONT_FAMILY, 11)
 """Police standard moyenne (taille 11)."""
 
-FONT_MD_BOLD: tuple = (FONT_FAMILY, 11, "bold")
+FONT_MD_BOLD: tuple[str, int, str] = (FONT_FAMILY, 11, "bold")
 """Police moyenne grasse (taille 11, bold)."""
 
-FONT_LG_BOLD: tuple = (FONT_FAMILY, 11, "bold")
+FONT_LG_BOLD: tuple[str, int, str] = (FONT_FAMILY, 11, "bold")
 """Police grande grasse (taille 11, bold)."""
-
 
 # =============================================================================
 #  STYLES DE BOUTONS
