@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import os
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import filedialog, messagebox
 
 from constants import TAG_CLOSE, TAG_OPEN
 from controllers.config_controller import ConfigController
@@ -75,6 +75,7 @@ class MainController:
             "apply_rename": self.apply_rename,
             "open_explorer": self.open_explorer,
             "reload_current_folder": self.reload_current_folder,
+            "select_folder": self.select_folder,
             "on_tag_toggled": lambda: self.view_controller.on_tag_toggled(
                 self.file_controller,
             ),
@@ -324,6 +325,13 @@ class MainController:
 
         self.config_controller.update_last_opened_folder(folder_path)
         self._reload_folder(folder_path)
+
+    def select_folder(self) -> None:
+        """Ouvre un dialogue pour selectionner un dossier et charge la galerie."""
+        directory = filedialog.askdirectory(title="Selectionner un dossier a ouvrir")
+        if directory:
+            self.config_controller.update_last_opened_folder(directory)
+            self._reload_folder(directory)
 
     def _on_drop(self, event: tk.Event) -> None:
         """

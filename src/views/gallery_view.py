@@ -21,7 +21,7 @@ Layout :
 
 Example:
     >>> view = GalleryView(root, callbacks)
-    >>> view.info_var.set("'photo.png'     -     1 / 5")
+    >>> view.info_var.set("'photo.png'     [ 1 / 5 ]")
 """
 
 from __future__ import annotations
@@ -36,8 +36,8 @@ from constants import (
     ENTRY_BG, ENTRY_FG, CHECK_BG, CHECK_FG,
     HIGHLIGHT, BTN_STYLE, BTN_APPLY_STYLE,
     FOOTER_PX, GALLERY_COL_WEIGHTS, FOOTER_COL_WEIGHTS,
-    FONT_FAMILY, FONT_SM, FONT_SM_BOLD, FONT_SM_ITALIC,
-    FONT_MD, FONT_MD_BOLD, FONT_LG_BOLD,
+    FONT_FAMILY, FONT_SM, FONT_SM_BOLD,
+    FONT_MD, FONT_MD_BOLD, FONT_LG_BOLD, SIZE_BORDER_BETWEEN_SUB_FRAME, SIZE_BORDER_INSIDE_MAIN_FRAME,
 )
 
 
@@ -48,8 +48,10 @@ class GalleryView:
     Attributes:
         root:             Fenêtre Tk principale.
         info_var:         StringVar du compteur (nom + index).
-        new_name_var:     StringVar du champ de renommage.
-        ext_label_var:    StringVar de l'extension affichée.
+        base_name_var:    StringVar du champ de base de nom.
+        tags_var:         StringVar du champ listant les tags.
+        counter_var:      StringVar du compteur au format texte (lecture seule).
+        ext_var:          StringVar de l'extension affichée (lecture seule).
         prev_label:       Label de l'image précédente.
         center_label:     Label de l'image centrale.
         next_label:       Label de l'image suivante.
@@ -75,6 +77,7 @@ class GalleryView:
                        - "apply_rename": renommage
                        - "open_explorer": ouvrir l'explorateur
                        - "reload_current_folder": recharger le dossier courant
+                       - "select_folder": ouvrir un explorateur pour choisir un dossier
                        - "on_tag_toggled": tag coché/décoché
 
         Example:
@@ -89,6 +92,7 @@ class GalleryView:
         self._build_info_bar(footer)
         self._build_tags_panel(footer)
         self._build_rename_panel(footer)
+        self._build_action_panel(footer)
 
         # --- Galerie (prend toute la place restante) ---
         self._build_gallery_frame()
@@ -111,22 +115,22 @@ class GalleryView:
         """
         self.gallery_frame = tk.Frame(self.root, bg=BG_COLOR)
         self.gallery_frame.pack(
-            side=tk.TOP, fill=tk.BOTH, expand=True, padx=10, pady=(10, 5),
+            side=tk.TOP, fill=tk.BOTH, expand=True, padx=SIZE_BORDER_INSIDE_MAIN_FRAME, pady=(SIZE_BORDER_INSIDE_MAIN_FRAME, 0),
         )
         for col, weight in enumerate(GALLERY_COL_WEIGHTS):
             self.gallery_frame.columnconfigure(col, weight=weight, uniform="gallery")
         self.gallery_frame.rowconfigure(0, weight=1)
 
         self.prev_label = self._create_image_panel(
-            self.gallery_frame, " Précédente ", ACCENT_COLOR, col=0, padx=(0, 5),
+            self.gallery_frame, " Précédente ", ACCENT_COLOR, col=0, padx=(0, SIZE_BORDER_BETWEEN_SUB_FRAME),
             on_click=self.callbacks["go_previous"],
         )
         self.center_label = self._create_image_panel(
-            self.gallery_frame, " Image courante ", HIGHLIGHT, col=1, padx=5,
+            self.gallery_frame, " Image courante ", HIGHLIGHT, col=1, padx=0,
             font_size=12,
         )
         self.next_label = self._create_image_panel(
-            self.gallery_frame, " Suivante ", ACCENT_COLOR, col=2, padx=(5, 0),
+            self.gallery_frame, " Suivante ", ACCENT_COLOR, col=2, padx=(SIZE_BORDER_BETWEEN_SUB_FRAME, 0),
             on_click=self.callbacks["go_next"],
         )
 
@@ -179,12 +183,13 @@ class GalleryView:
             tk.Frame: Frame footer prêt à recevoir ses enfants.
         """
         frame = tk.Frame(self.root, bg=BG_COLOR, height=FOOTER_PX)
-        frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=(0, 10))
+        frame.pack(side=tk.BOTTOM, fill=tk.X, padx=SIZE_BORDER_INSIDE_MAIN_FRAME, pady=(0, SIZE_BORDER_INSIDE_MAIN_FRAME))
         frame.pack_propagate(False)
         frame.grid_propagate(False)
 
         frame.columnconfigure(0, weight=FOOTER_COL_WEIGHTS[0], uniform="footer_split")
         frame.columnconfigure(1, weight=FOOTER_COL_WEIGHTS[1], uniform="footer_split")
+        frame.columnconfigure(2, weight=FOOTER_COL_WEIGHTS[2], uniform="footer_split")
         frame.rowconfigure(0, weight=0)
         frame.rowconfigure(1, weight=1)
         return frame
@@ -206,16 +211,16 @@ class GalleryView:
             parent: Frame footer.
         """
         bar = tk.Frame(parent, bg=BG_COLOR)
-        bar.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 5))
+        bar.grid(row=0, column=0, columnspan=3, sticky="ew", pady=SIZE_BORDER_BETWEEN_SUB_FRAME)
 
         tk.Button(
-            bar, text="📁  Ouvrir dans l'explorateur",
-            command=self.callbacks["open_explorer"], **BTN_STYLE,
+            bar, text="↻  Recharger gallerie",
+            command=self.callbacks["reload_current_folder"], **BTN_STYLE,
         ).pack(side=tk.LEFT, padx=(0, 10))
 
         tk.Button(
-            bar, text="↻  Recharger",
-            command=self.callbacks["reload_current_folder"], **BTN_STYLE,
+            bar, text="📁  Ouvrir un dossier",
+            command=self.callbacks["select_folder"], **BTN_STYLE,
         ).pack(side=tk.LEFT, padx=(0, 10))
 
         self.info_var = tk.StringVar(value="")
@@ -226,17 +231,14 @@ class GalleryView:
         ).pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         tk.Button(
-            bar, text="Suivant  ▶",
-            command=self.callbacks["go_next"], **BTN_STYLE,
-        ).pack(side=tk.RIGHT, padx=(5, 0))
-        tk.Button(
-            bar, text="◀  Précédent",
-            command=self.callbacks["go_previous"], **BTN_STYLE,
-        ).pack(side=tk.RIGHT, padx=(5, 0))
+            bar, text="📁  Localiser dans l'explorateur",
+            command=self.callbacks["open_explorer"], **BTN_STYLE,
+        ).pack(side=tk.LEFT, padx=(0, 0))
+
         tk.Button(
             bar, text="🔍  Prochain à tagguer",
             command=self.callbacks["go_next_untagged"], **BTN_STYLE,
-        ).pack(side=tk.RIGHT, padx=(5, 0))
+        ).pack(side=tk.RIGHT, padx=(10, 0))
 
     # =================================================================
     #  Ligne 2 du footer — Tags (gauche)
@@ -256,7 +258,7 @@ class GalleryView:
             parent, text=" Tags détectés ", bg=FRAME_BG, fg=ACCENT_COLOR,
             font=FONT_SM_BOLD, labelanchor="nw",
         )
-        outer.grid(row=1, column=0, sticky="nsew", padx=(0, 5))
+        outer.grid(row=1, column=0, sticky="nsew", padx=(0, SIZE_BORDER_BETWEEN_SUB_FRAME))
 
         scrollbar = ttk.Scrollbar(outer, orient="vertical")
 
@@ -288,60 +290,122 @@ class GalleryView:
             parent, text=" Renommage ", bg=FRAME_BG, fg=ACCENT_COLOR,
             font=FONT_SM_BOLD, labelanchor="nw",
         )
-        outer.grid(row=1, column=1, sticky="nsew", padx=(5, 0))
+        outer.grid(row=1, column=1, sticky="nsew", padx=(0, 0))
 
-        # --- Ligne 1 : Nouveau nom ---
+        # --- Ligne 1 : Base du nom ---
         row1 = tk.Frame(outer, bg=FRAME_BG)
-        row1.pack(side=tk.TOP, fill=tk.X, padx=8, pady=(8, 4))
-
-        tk.Label(row1, text="Nouveau nom :", bg=FRAME_BG, fg=FG_COLOR,
-                 font=FONT_MD).pack(side=tk.LEFT)
-
-        self.new_name_var = tk.StringVar(value="")
+        row1.pack(side=tk.TOP, fill=tk.X, padx=8, pady=(8, 2))
+        
+        tk.Label(row1, text="Base du nom :", bg=FRAME_BG, fg=FG_COLOR, font=FONT_MD).pack(side=tk.LEFT)
+        self.base_name_var = tk.StringVar(value="")
         tk.Entry(
-            row1, textvariable=self.new_name_var,
+            row1, textvariable=self.base_name_var,
             bg=ENTRY_BG, fg=ENTRY_FG, insertbackground=FG_COLOR,
-            font=FONT_MD, relief="flat",
-        ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=10)
+            font=FONT_MD, relief="flat"
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(8, 0))
 
-        # --- Ligne 2 : Longueurs + Bouton Appliquer ---
+        # --- Ligne 2 : Tags ---
+        row2 = tk.Frame(outer, bg=FRAME_BG)
+        row2.pack(side=tk.TOP, fill=tk.X, padx=8, pady=(2, 2))
+        
+        tk.Label(row2, text="Tags :", bg=FRAME_BG, fg=FG_COLOR, font=FONT_MD).pack(side=tk.LEFT)
+        self.tags_var = tk.StringVar(value="")
+        tk.Entry(
+            row2, textvariable=self.tags_var,
+            bg=ENTRY_BG, fg=ENTRY_FG, insertbackground=FG_COLOR,
+            font=FONT_MD, relief="flat"
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(8, 0))
+
+        # --- Ligne 3 : Compteur & Extension ---
         row3 = tk.Frame(outer, bg=FRAME_BG)
-        row3.pack(side=tk.TOP, fill=tk.X, padx=8, pady=(0, 0))
+        row3.pack(side=tk.TOP, fill=tk.X, padx=8, pady=(2, 2))
+        
+        # Compteur (lecture seule)
+        tk.Label(row3, text="Compteur :", bg=FRAME_BG, fg=FG_COLOR, font=FONT_MD).pack(side=tk.LEFT)
+        self.counter_var = tk.StringVar(value="")
+        tk.Label(
+            row3, textvariable=self.counter_var, bg=FRAME_BG,
+            fg=ACCENT_COLOR, font=FONT_MD_BOLD
+        ).pack(side=tk.LEFT, padx=(4, 16))
+        
+        # Extension (lecture seule)
+        tk.Label(row3, text="Extension :", bg=FRAME_BG, fg=FG_COLOR, font=FONT_MD).pack(side=tk.LEFT)
+        self.ext_var = tk.StringVar(value="")
+        tk.Label(
+            row3, textvariable=self.ext_var, bg=FRAME_BG,
+            fg=ACCENT_COLOR, font=FONT_MD_BOLD
+        ).pack(side=tk.LEFT, padx=(8, 0))
+
+        # --- Ligne 4 : Longueurs + Bouton Appliquer ---
+        row4 = tk.Frame(outer, bg=FRAME_BG)
+        row4.pack(side=tk.TOP, fill=tk.X, padx=8, pady=(2, 8))
 
         # Longueur totale du chemin
         self.path_len_var = tk.StringVar(value="")
         tk.Label(
-            row3, text="Long. Chemin :", bg=FRAME_BG, fg=FG_COLOR,
+            row4, text="Long. Chemin :", bg=FRAME_BG, fg=FG_COLOR,
             font=FONT_SM,
         ).pack(side=tk.LEFT)
         tk.Label(
-            row3, textvariable=self.path_len_var, bg=FRAME_BG,
+            row4, textvariable=self.path_len_var, bg=FRAME_BG,
             fg=ACCENT_COLOR, font=FONT_SM_BOLD, width=5, anchor="w",
         ).pack(side=tk.LEFT)
 
         # Longueur du fichier avec extension
         self.filename_len_var = tk.StringVar(value="")
         tk.Label(
-            row3, text="Long. Fichier :", bg=FRAME_BG, fg=FG_COLOR,
+            row4, text="Long. Fichier :", bg=FRAME_BG, fg=FG_COLOR,
             font=FONT_SM,
         ).pack(side=tk.LEFT)
         tk.Label(
-            row3, textvariable=self.filename_len_var, bg=FRAME_BG,
+            row4, textvariable=self.filename_len_var, bg=FRAME_BG,
             fg=ACCENT_COLOR, font=FONT_SM_BOLD, width=5, anchor="w",
         ).pack(side=tk.LEFT)
 
-        tk.Label(
-            row3, text="Ext. :", bg=FRAME_BG, fg=FG_COLOR,
-            font=FONT_SM,
-        ).pack(side=tk.LEFT)
-        self.ext_label_var = tk.StringVar(value="")
-        tk.Label(row3, textvariable=self.ext_label_var, bg=FRAME_BG,
-                 fg=ACCENT_COLOR, font=FONT_MD_BOLD).pack(side=tk.LEFT)
+    # =================================================================
+    #  Ligne 2 du footer — Actions (droite)
+    # =================================================================
+
+    def _build_action_panel(self, parent: tk.Frame) -> None:
+        """
+        Construit le panneau d'actions.
+
+        Placé dans la ligne 2 du footer (colonne 2).
+
+        Args:
+            parent: Frame footer.
+        """
+        outer = tk.LabelFrame(
+            parent, text=" Actions ", bg=FRAME_BG, fg=ACCENT_COLOR,
+            font=FONT_SM_BOLD, labelanchor="nw",
+        )
+        outer.grid(row=1, column=2, sticky="nsew", padx=(SIZE_BORDER_BETWEEN_SUB_FRAME, 0))
+
+        # Organisation des boutons
+        outer.grid_columnconfigure(0, weight=1)
+        outer.grid_rowconfigure(0, weight=0)
+        outer.grid_rowconfigure(1, weight=1)
+
+        nav_frame = tk.Frame(outer, bg=FRAME_BG)
+        nav_frame.grid(row=0, column=0, sticky="ew", padx=8, pady=8)
+        nav_frame.columnconfigure(0, weight=1)
+        nav_frame.columnconfigure(1, weight=1)
 
         tk.Button(
-            row3, text="✔  Renommer fichier",
+            nav_frame, text="◀  Préc.",
+            command=self.callbacks["go_previous"], **BTN_STYLE,
+        ).grid(row=0, column=0, sticky="ew", padx=(0, 8))
+
+        tk.Button(
+            nav_frame, text="Suiv.  ▶",
+            command=self.callbacks["go_next"], **BTN_STYLE,
+        ).grid(row=0, column=1, sticky="ew", padx=(0, 0))
+
+        # bouton 'Renommer fichier'
+        tk.Button(
+            outer, text="✔  Renommer fichier",
             command=self.callbacks["apply_rename"], **BTN_APPLY_STYLE,
-        ).pack(side=tk.RIGHT)
+        ).grid(row=1, column=0, sticky="nsew", padx=8, pady=(20, 8))
 
     # =================================================================
     #  Cases à cocher

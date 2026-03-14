@@ -36,14 +36,14 @@ SUPPORTED_EXTENSIONS: frozenset[str] = frozenset({
 LOADING_WIN_SIZE: tuple[int, int] = (450, 350)
 """Dimensions (largeur, hauteur) de la fenêtre de chargement en pixels."""
 
-FOOTER_PX: int = 200
+FOOTER_PX: int = 210
 """Hauteur fixe du footer en pixels."""
 
 GALLERY_COL_WEIGHTS: list[int] = [20, 60, 20]
 """Poids des colonnes de la galerie triptyque (gauche, centre, droite)."""
 
-FOOTER_COL_WEIGHTS: tuple[int, int] = (54, 46)
-"""Poids des colonnes du footer (tags, renommage) pour une répartition 54/46."""
+FOOTER_COL_WEIGHTS: tuple[int, int, int] = (54, 31, 14)
+"""Poids des colonnes du footer (tags, renommage, actions -> 3 zones)."""
 
 MIN_WIN_WIDTH: int = 300
 """Largeur minimale de la fenêtre principale en pixels."""
@@ -53,6 +53,12 @@ MIN_WIN_HEIGHT: int = 300
 
 GALLERY_RESIZE_DEBOUNCE_MS: int = 120
 """Délai de debounce (ms) avant rafraîchissement des images au resize."""
+
+SIZE_BORDER_INSIDE_MAIN_FRAME: int = 6
+"""Taille de la bordure intérieure du cadre principal (padding interne)."""
+
+SIZE_BORDER_BETWEEN_SUB_FRAME: int = 6
+"""Taille de la bordure entre les sous-cadres (padding entre les zones)."""
 
 # =============================================================================
 #  SÉPARATEURS (ex: 'base - [tags] - 1000')
@@ -152,7 +158,7 @@ BTN_STYLE: dict = {
     "activebackground": ACCENT_COLOR, "activeforeground": "#000",
     "font": FONT_MD_BOLD,
     "relief": "flat", "cursor": "hand2",
-    "padx": 8, "pady": 4,
+    "padx": 10, "pady": 5,
 }
 """Style par défaut des boutons de navigation."""
 
@@ -161,6 +167,6 @@ BTN_APPLY_STYLE: dict = {
     "activebackground": "#40a02b", "activeforeground": "#fff",
     "font": FONT_MD_BOLD,
     "relief": "flat", "cursor": "hand2",
-    "padx": 8, "pady": 4,
+    "padx": 10, "pady": 5,
 }
 """Style du bouton « Appliquer le renommage » (vert succès)."""

@@ -98,7 +98,7 @@ Affiche en permanence :
 ### 4. Panneau de tags (cases à cocher)
 
 - Situé en bas à gauche (largeur liée à 'FOOTER_COL_WEIGHTS').
-- Affiche **tous les tags** détectés dans l’ensemble du dossier, avec leur nombre d’occurrences entre parenthèses (ex : `chat (5)`).
+- Affiche **tous les tags** détectés dans l’ensemble du dossier, avec leur nombre d’occurrences entre parenthèses (ex : `chat (32)`).
 - Les tags sont triés par **fréquence décroissante**, puis alphabétiquement.
 - Les tags présents dans le nom du fichier courant sont **pré-cochés automatiquement**.
 - Cocher/décocher un tag met à jour instantanément le champ de renommage.

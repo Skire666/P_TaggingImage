@@ -202,10 +202,13 @@ class ViewController:
         filename = file_controller.current_filename()
         total = file_controller.total()
         idx = file_controller.current_index
+        
+        counter_text = f" Image courante [ {idx + 1} / {total} ] "
+        self.view.center_label.master["text"] = counter_text
 
-        self.view.info_var.set(f"'{filename}'     -     {idx + 1} / {total}")
-        _name, ext = os.path.splitext(filename)
-        self.view.ext_label_var.set(ext)
+        self.view.info_var.set(f"'{filename}'")
+        ext = TagTools.get_extension(filename)
+        self.view.ext_var.set(ext)
 
         tags = TagTools.get_list_tags(filename)
         tags_lower = {t.lower() for t in tags}
@@ -230,23 +233,23 @@ class ViewController:
         filename = file_controller.current_filename()
 
         base_name = TagTools.get_base_name(filename)
-        extension = self.view.ext_label_var.get()
         counter = TagTools.get_counter(filename)
 
-        if not selected:
-            new_name = f"{base_name}{TAG_OPEN}{TAG_CLOSE}{counter}{extension}"
-        else:
-            tag_part = TAG_SEPARATOR.join(selected)
-            bracket_block = TAG_OPEN + tag_part + TAG_CLOSE
-            new_name = f"{base_name}{bracket_block}{counter}{extension}"
-
-        self.view.new_name_var.set(new_name)
+        self.view.base_name_var.set(base_name)
+        
+        tag_part = TAG_SEPARATOR.join(selected)
+        self.view.tags_var.set(tag_part)
+        self.view.counter_var.set(str(counter))
 
     def trace_new_name(self, file_controller: FileController) -> None:
         """Abonne le recalcul d'aperçu aux modifications du champ nom."""
         if self.view is None:
             return
-        self.view.new_name_var.trace_add(
+        self.view.base_name_var.trace_add(
+            "write",
+            lambda *_: self.update_preview(file_controller),
+        )
+        self.view.tags_var.trace_add(
             "write",
             lambda *_: self.update_preview(file_controller),
         )
@@ -267,7 +270,7 @@ class ViewController:
             self.clear_preview_fields()
             return
 
-        new_base = self.view.new_name_var.get().strip()
+        new_base = self.get_new_name()
         if not new_base:
             self.clear_preview_fields()
             return
@@ -277,10 +280,21 @@ class ViewController:
         self.view.filename_len_var.set(str(len(new_base)))
 
     def get_new_name(self) -> str:
-        """Retourne le contenu du champ `Nouveau nom`."""
+        """Retourne le nom complet généré à partir des différents champs."""
         if self.view is None:
             return ""
-        return self.view.new_name_var.get()
+            
+        base_name = self.view.base_name_var.get()
+        tags = self.view.tags_var.get()
+        counter = self.view.counter_var.get()
+        ext = self.view.ext_var.get()
+
+        if not tags.strip():
+            bracket_block = f"{TAG_OPEN}{TAG_CLOSE}"
+        else:
+            bracket_block = f"{TAG_OPEN}{tags}{TAG_CLOSE}"
+
+        return f"{base_name}{bracket_block}{counter}{ext}"
 
     def rebuild_tag_checkboxes(self, file_controller: FileController) -> None:
         """Reconstruit la liste des checkboxes a partir des tags agreges."""

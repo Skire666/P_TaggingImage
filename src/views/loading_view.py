@@ -112,7 +112,7 @@ class LoadingView:
             self.top, text="Analyse des fichiers en cours…",
             bg=BG_COLOR, fg=FG_COLOR, font=FONT_MD,
         )
-        label.pack(pady=(15, 5))
+        label.pack(pady=(16, 4))
         return label
 
     def _create_progressbar(self, total: int) -> ttk.Progressbar:
@@ -144,7 +144,7 @@ class LoadingView:
             mode="determinate", maximum=total,
             style="Loading.Horizontal.TProgressbar",
         )
-        bar.pack(pady=(5, 15))
+        bar.pack(pady=(4, 16))
         return bar
 
     def update(self, current: int, total: int) -> None:
