@@ -69,6 +69,8 @@ class ViewController:
         """Attache les raccourcis clavier de la fenetre."""
         if self.root is None:
             return
+        
+        # touche "Entrée" pour appliquer le renommage
         self.root.bind("<Return>", lambda _: on_apply_rename())
 
     def bind_drop(self, on_drop: Callable[[tk.Event], None]) -> None:
@@ -86,9 +88,10 @@ class ViewController:
 
     def _initial_display(self, file_controller: FileController) -> None:
         """Effectue le premier affichage et prepare le resize dynamique."""
-        self.display_current(file_controller)
+        self.refresh_image_displayed(file_controller)
         if self.view is not None:
             self.view.build_tag_checkboxes(file_controller.tag_dict())
+        self.update_info_and_tags(file_controller)
         self._bind_gallery_resize(file_controller)
 
     def _bind_gallery_resize(self, file_controller: FileController) -> None:
@@ -129,18 +132,19 @@ class ViewController:
         w = self.view.gallery_frame.winfo_width()
         h = self.view.gallery_frame.winfo_height()
         self._last_gallery_size = (w, h)
-        self.display_current(file_controller)
+        self.refresh_image_displayed(file_controller)
 
-    def display_current(self, file_controller: FileController) -> None:
-        """Rafraichit les 3 panneaux d'image et les infos associees."""
+    def refresh_image_displayed(self, file_controller: FileController) -> None:
+        """Rafraichit les 3 panneaux d'image"""
         if self.view is None or self.root is None or not file_controller.has_files():
             return
 
         center_size = self._get_panel_size(self.view.center_label)
         side_size = self._get_panel_size(self.view.prev_label)
 
+        # Si les panneaux n'ont pas encore de taille valide (ex: juste apres creation), on reessaye un peu plus tard
         if center_size[0] <= 1 or center_size[1] <= 1:
-            self.root.after(50, lambda: self.display_current(file_controller))
+            self.root.after(100, lambda: self.refresh_image_displayed(file_controller))
             return
 
         gf = self.view.gallery_frame
@@ -162,7 +166,6 @@ class ViewController:
             side_size,
             file_controller,
         )
-        self.update_info_and_tags(file_controller)
 
     def _get_panel_size(self, label: tk.Label) -> tuple[int, int]:
         """Retourne une taille minimale valide pour un panneau d'image."""
@@ -233,12 +236,12 @@ class ViewController:
         filename = file_controller.current_filename()
 
         base_name = TagTools.get_base_name(filename)
-        counter = TagTools.get_counter(filename)
-
         self.view.base_name_var.set(base_name)
-        
+
         tag_part = TAG_SEPARATOR.join(selected)
         self.view.tags_var.set(tag_part)
+
+        counter = TagTools.get_counter(filename)
         self.view.counter_var.set(str(counter))
 
     def trace_new_name(self, file_controller: FileController) -> None:
@@ -285,16 +288,16 @@ class ViewController:
             return ""
             
         base_name = self.view.base_name_var.get()
-        tags = self.view.tags_var.get()
+        tags = self.view.tags_var.get().strip().lower()
         counter = self.view.counter_var.get()
         ext = self.view.ext_var.get()
 
-        if not tags.strip():
+        if not tags:
             bracket_block = f"{TAG_OPEN}{TAG_CLOSE}"
         else:
             bracket_block = f"{TAG_OPEN}{tags}{TAG_CLOSE}"
 
-        return f"{base_name}{bracket_block}{counter}{ext}"
+        return f"{base_name}{bracket_block}{counter}{ext}";
 
     def rebuild_tag_checkboxes(self, file_controller: FileController) -> None:
         """Reconstruit la liste des checkboxes a partir des tags agreges."""

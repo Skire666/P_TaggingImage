@@ -131,7 +131,7 @@ class MainController:
             return
 
         old_filename = self.file_controller.current_filename()
-        new_filename = self._build_new_filename(old_filename)
+        new_filename = self._build_new_filename()
 
         if not new_filename:
             return
@@ -141,6 +141,9 @@ class MainController:
         new_filename = self._resolve_conflict(new_filename)
         if not new_filename:
             return
+        
+        # clean espaces en trop ('  ' -> ' ')
+        new_filename = ' '.join(new_filename.split())
 
         full_path = self.file_controller.full_path_for(new_filename)
         if not self._check_length(
@@ -161,7 +164,7 @@ class MainController:
 
         self._perform_rename(old_filename, new_filename)
 
-    def _build_new_filename(self, old_filename: str) -> str | None:
+    def _build_new_filename(self) -> str | None:
         """
         Construit un nom initial `base - 1000.ext` depuis le champ de la vue.
 
@@ -266,7 +269,8 @@ class MainController:
 
         self.file_controller.build_tags()
         self.view_controller.rebuild_tag_checkboxes(self.file_controller)
-        self.view_controller.display_current(self.file_controller)
+        self.view_controller.refresh_image_displayed(self.file_controller)
+        self.view_controller.update_info_and_tags(self.file_controller)
         messagebox.showinfo("Succes", f"{old_filename}\n->\n{new_filename}")
 
     def go_next(self) -> None:
@@ -276,7 +280,8 @@ class MainController:
         if not self.file_controller.has_files():
             return
         self.file_controller.go_next()
-        self.view_controller.display_current(self.file_controller)
+        self.view_controller.refresh_image_displayed(self.file_controller)
+        self.view_controller.update_info_and_tags(self.file_controller)
 
     def go_previous(self) -> None:
         """
@@ -285,7 +290,8 @@ class MainController:
         if not self.file_controller.has_files():
             return
         self.file_controller.go_previous()
-        self.view_controller.display_current(self.file_controller)
+        self.view_controller.refresh_image_displayed(self.file_controller)
+        self.view_controller.update_info_and_tags(self.file_controller)
 
     def go_next_untagged(self) -> None:
         """Navigue vers le prochain fichier non conforme au format cible."""
@@ -295,7 +301,8 @@ class MainController:
         idx = self.file_controller.find_next_untagged()
         if idx is not None:
             self.file_controller.current_index = idx
-            self.view_controller.display_current(self.file_controller)
+            self.view_controller.refresh_image_displayed(self.file_controller)
+            self.view_controller.update_info_and_tags(self.file_controller)
             return
 
         messagebox.showinfo(
@@ -374,6 +381,7 @@ class MainController:
         self._build_tags_with_progress()
         self.view_controller.reset_image_refs()
         self.view_controller.rebuild_tag_checkboxes(self.file_controller)
-        self.view_controller.display_current(self.file_controller)
+        self.view_controller.refresh_image_displayed(self.file_controller)
+        self.view_controller.update_info_and_tags(self.file_controller)
 
         self.view_controller.set_window_title_for_folder(folder_path)
